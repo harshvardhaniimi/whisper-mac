@@ -1,0 +1,57 @@
+# Xcode
+.DS_Store
+*.swp
+*~.nib
+*.xcworkspace
+!default.xcworkspace
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code coverage
+*.gcda
+*.gcno
+*.profdata
+
+# Build files
+build/
+Build/
+
+# whisper.cpp clone
+whisper.cpp/
+
+# Temporary files
+*.tmp
+.cache/
+
+# Application Support (models stored here)
+# Don't commit large model files
+*.bin
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
