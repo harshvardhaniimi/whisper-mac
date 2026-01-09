@@ -20,6 +20,11 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.xl) {
+                    // Hotkey section
+                    hotkeySection
+
+                    Divider()
+
                     // Models section
                     modelSection
 
@@ -36,7 +41,64 @@ struct SettingsView: View {
                 .padding(DesignSystem.Spacing.md)
             }
         }
-        .frame(width: 500, height: 400)
+        .frame(width: 500, height: 500)
+    }
+
+    // MARK: - Hotkey Section
+
+    private var hotkeySection: some View {
+        VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
+            Text("Global Hotkey")
+                .font(DesignSystem.Typography.headline)
+                .foregroundColor(DesignSystem.Colors.textPrimary)
+
+            Toggle(isOn: $appState.globalHotkeyEnabled) {
+                Text("Enable Ctrl+Ctrl hotkey")
+                    .font(DesignSystem.Typography.body)
+            }
+            .onChange(of: appState.globalHotkeyEnabled) { _ in
+                appState.toggleGlobalHotkey()
+            }
+
+            VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
+                Text("How it works:")
+                    .font(DesignSystem.Typography.callout)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                    .fontWeight(.semibold)
+
+                Text("• Press Ctrl twice quickly to start recording")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                Text("• Speak your message")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                Text("• Press Ctrl twice again to stop and transcribe")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+
+                Text("• Text is automatically inserted at your cursor and copied to clipboard")
+                    .font(DesignSystem.Typography.caption)
+                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            }
+            .padding(DesignSystem.Spacing.sm)
+            .background(DesignSystem.Colors.accent.opacity(0.1))
+            .cornerRadius(DesignSystem.CornerRadius.sm)
+
+            if !appState.hotkeyManager.checkAccessibilityPermissions() {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(DesignSystem.Colors.warning)
+                    Text("Accessibility access required. Please enable in System Settings → Privacy & Security → Accessibility")
+                        .font(DesignSystem.Typography.caption)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
+                .padding(DesignSystem.Spacing.sm)
+                .background(DesignSystem.Colors.warning.opacity(0.1))
+                .cornerRadius(DesignSystem.CornerRadius.sm)
+            }
+        }
     }
 
     // MARK: - Model Section

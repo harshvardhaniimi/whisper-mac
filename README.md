@@ -26,6 +26,12 @@ A beautiful, native macOS app for speech-to-text transcription using OpenAI's Wh
 
 ⚡ **Apple Silicon Optimized** - Leverages Metal and Accelerate frameworks for blazing-fast performance on M1/M2/M3 Macs.
 
+⌨️ **Global Hotkey** - Press Ctrl twice to start/stop recording from anywhere. Text is automatically inserted at your cursor and copied to clipboard.
+
+🚀 **Auto-Setup** - First launch automatically downloads the base model. No manual setup required - just install and use!
+
+🔔 **Smart Notifications** - Audio/visual feedback when recording starts, stops, and transcription completes.
+
 ## Screenshots
 
 *(Menu Bar App)*
@@ -76,22 +82,36 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build instructio
 
 ## Quick Start
 
+### First Launch
+
 1. **Launch the app** - A waveform icon will appear in your menu bar
+2. **Wait for auto-download** - The base model (142 MB) downloads automatically on first launch
+3. **Grant permissions** - Allow Microphone and Accessibility access when prompted
+4. **You're ready!** - Press Ctrl twice from anywhere to start recording
 
-2. **Download a model:**
-   - Click the menu bar icon → Settings (⚙️)
-   - Download at least one model (Base recommended for first-time users)
-   - Models are 75 MB - 2.9 GB depending on size
+### Using the Global Hotkey (Recommended)
 
-3. **Start transcribing:**
-   - Click the menu bar icon
-   - Click "Record" and speak
-   - Click "Stop Recording" when done
-   - Wait a few seconds for transcription
+The fastest way to transcribe:
 
-4. **Or transcribe a file:**
-   - Drag & drop an audio file into the app window
-   - Wait for processing
+1. **Start recording** - Press Ctrl key twice quickly (anywhere in macOS)
+2. **Speak** - Say what you want to transcribe
+3. **Stop & transcribe** - Press Ctrl twice again
+4. **Done!** - Text appears at your cursor and is copied to clipboard
+
+**Example:** Writing an email? Click in the email body, press Ctrl+Ctrl, speak your message, press Ctrl+Ctrl again. The transcribed text appears in your email!
+
+### Using the Menu Bar App
+
+1. **Click the menu bar icon**
+2. **Click "Record"** and speak
+3. **Click "Stop Recording"** when done
+4. **Copy to clipboard** to use the text elsewhere
+
+### Transcribing Files
+
+1. **Drag & drop** an audio file into the main window
+2. **Wait** for processing (varies by file length and model size)
+3. **Copy or export** the transcription
 
 ## Model Selection Guide
 
@@ -159,28 +179,42 @@ Models are downloaded once from Hugging Face and stored locally:
 
 ## Keyboard Shortcuts
 
-*(Coming in future updates)*
-
-- `⌘+R` - Start/Stop recording
+- **Ctrl+Ctrl** (anywhere in macOS) - Start/stop recording with auto-insert at cursor
 - `⌘+C` - Copy transcription
-- `⌘+,` - Settings
-- `⌘+H` - Show history
+- `⌘+,` - Settings (coming soon)
+- `⌘+H` - Show history (coming soon)
+
+### Global Hotkey Setup
+
+The global hotkey (Ctrl+Ctrl) requires **Accessibility permissions**:
+
+1. Open **System Settings** → **Privacy & Security** → **Accessibility**
+2. Enable **WhisperMac**
+3. You may need to restart the app
+
+Once enabled, you can:
+- Record from any application
+- Have text automatically inserted at your cursor
+- Text is also copied to clipboard as backup
 
 ## Roadmap
 
 - [x] Core transcription functionality
 - [x] Menu bar app interface
 - [x] Full window interface
-- [x] Model management
+- [x] Model management with auto-download
 - [x] History with search
 - [x] Export functionality
-- [ ] Global hotkey for quick recording
+- [x] Global hotkey (Ctrl+Ctrl) for quick recording
+- [x] Text insertion at cursor position
+- [x] Audio/visual feedback notifications
 - [ ] Streaming transcription (real-time results)
 - [ ] Custom vocabulary support
 - [ ] Speaker diarization
 - [ ] Timestamp display
-- [ ] Keyboard shortcuts
+- [ ] Additional keyboard shortcuts
 - [ ] Dark/light mode customization
+- [ ] Configurable hotkey (currently Ctrl+Ctrl)
 - [ ] App Store distribution
 
 ## Contributing
@@ -195,14 +229,31 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for development setup.
 - Check that `LSUIElement` is set in Info.plist
 - Restart the app
 
+**Global hotkey (Ctrl+Ctrl) not working:**
+- Enable Accessibility permissions: System Settings → Privacy & Security → Accessibility → Enable WhisperMac
+- Make sure the hotkey is enabled in Settings
+- Restart the app after granting permissions
+- Check if another app is using the same hotkey
+
+**Text not inserting at cursor:**
+- Enable Accessibility permissions (see above)
+- The text is always copied to clipboard as a backup - use Cmd+V to paste
+- Make sure you're focused in a text input field
+
 **Microphone not working:**
 - System Settings → Privacy & Security → Microphone
 - Enable permission for WhisperMac
+
+**Model didn't auto-download on first launch:**
+- Check internet connection
+- Go to Settings and manually download the base model
+- Check ~/Library/Application Support/WhisperMac/models/
 
 **Poor transcription quality:**
 - Try a larger model (small or medium)
 - Ensure good audio quality (clear voice, minimal background noise)
 - Check microphone input levels
+- Speak clearly and avoid background noise
 
 **Slow performance:**
 - Use a smaller model (tiny or base)

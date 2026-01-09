@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
     var mainWindow: NSWindow?
+    private var flashTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create menu bar item
@@ -37,6 +38,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             rootView: MainView()
                 .environmentObject(AppState.shared)
         )
+
+        // Set up notification observer for flashing icon
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(flashIcon),
+            name: NSNotification.Name("FlashMenuBarIcon"),
+            object: nil
+        )
+
+        // Initialize app state (downloads model if needed, starts hotkey monitoring)
+        Task {
+            await AppState.shared.initialize()
+        }
+    }
+
+    @objc func flashIcon() {
+        guard let button = statusItem?.button else { return }
+
+        var flashCount = 0
+        flashTimer?.invalidate()
+
+        flashTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] timer in
+            flashCount += 1
+
+            if flashCount % 2 == 0 {
+                button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Whisper")
+            } else {
+                button.image = NSImage(systemSymbolName: "waveform.circle.fill", accessibilityDescription: "Recording")
+            }
+
+            if flashCount >= 6 {
+                timer.invalidate()
+                button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Whisper")
+            }
+        }
     }
 
     @objc func togglePopover() {
