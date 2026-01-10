@@ -44,29 +44,36 @@ Then in Xcode:
 3. Clean build folder: Press ⇧⌘K (Shift+Command+K)
 4. Build: Press ⌘B (Command+B)
 
-### 2. C++ Compilation Errors in ggml-alloc
+### 2. C++ Compilation Errors in ggml Files
 
 **Symptoms:**
 ```
 Cannot initialize a variable of type 'struct tallocr_chunk *' with an rvalue of type 'void *'
 Assigning to 'ggml_backend_buffer_type_t *' from incompatible type 'void *'
+Cannot initialize a variable of type 'const block_q4_0 *' with an rvalue of type 'void *'
+Assigning to 'block_iq2_xxs *' from incompatible type 'void *'
 ```
 
-**Cause:** The `ggml-alloc.c` file is renamed to `.cpp` for Swift Package Manager, but C++ requires explicit casts from `void*`.
+**Cause:** Multiple `.c` files are renamed to `.cpp` for Swift Package Manager, but C++ requires explicit casts from `void*`. This affects 3 files with 65 total issues:
+- `ggml-alloc.cpp` (8 issues) - malloc/calloc/realloc casts
+- `ggml-quants.cpp` (8 issues) - block_iq* pointer assignments
+- `quants.cpp` (49 issues) - block_q* pointer assignments in CPU implementation
 
 **Solution:**
 
-The updated `setup.sh` automatically fixes these issues. If you already ran setup before this fix:
+The updated `setup.sh` automatically fixes ALL these issues. If you already ran setup before this fix:
 
 ```bash
-# Option 1: Use the fix script
+# Option 1: Use the fix script (recommended)
 ./fix-build.sh
 
 # Option 2: Re-run setup
 ./setup.sh
 ```
 
-The fix adds explicit type casts to all `malloc`, `calloc`, and `realloc` calls in `ggml-alloc.cpp`.
+The fixes add explicit type casts to:
+- All `malloc`, `calloc`, and `realloc` calls
+- All void* to typed pointer assignments (block_q*, block_iq* structs)
 
 ### 3. Missing Source Files
 

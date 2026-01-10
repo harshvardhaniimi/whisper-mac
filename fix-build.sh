@@ -54,20 +54,16 @@ rerun_setup() {
     echo ""
 }
 
-# Function to apply C++ fixes to ggml-alloc.cpp if it already exists
-fix_ggml_alloc() {
+# Function to apply C++ fixes to all ggml files
+fix_ggml_files() {
     echo "🔨 Applying C++ compatibility fixes..."
 
+    local fixed_count=0
+
+    # Fix ggml-alloc.cpp
     if [ -f "Sources/WhisperCpp/src/ggml-alloc.cpp" ]; then
         echo "  → Fixing ggml-alloc.cpp..."
-
-        # Create a backup
-        cp Sources/WhisperCpp/src/ggml-alloc.cpp Sources/WhisperCpp/src/ggml-alloc.cpp.bak
-
-        # Create a temporary file
         TMP_FILE=$(mktemp)
-
-        # Fix void* pointer assignments with explicit casts
         sed -E \
             -e 's/struct tallocr_chunk \* chunk = calloc\(/struct tallocr_chunk * chunk = (struct tallocr_chunk *)calloc(/g' \
             -e 's/galloc->bufts = calloc\(/galloc->bufts = (ggml_backend_buffer_type_t *)calloc(/g' \
@@ -78,19 +74,65 @@ fix_ggml_alloc() {
             -e 's/galloc->leaf_allocs = calloc\(/galloc->leaf_allocs = (struct leaf_alloc *)calloc(/g' \
             -e 's/\*buffers = realloc\(/*buffers = (ggml_backend_buffer_t *)realloc(/g' \
             Sources/WhisperCpp/src/ggml-alloc.cpp > "$TMP_FILE"
-
-        # Check if changes were made
         if ! diff -q Sources/WhisperCpp/src/ggml-alloc.cpp "$TMP_FILE" > /dev/null 2>&1; then
             mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-alloc.cpp
-            echo "    ✓ Applied fixes to ggml-alloc.cpp"
-            rm -f Sources/WhisperCpp/src/ggml-alloc.cpp.bak
+            echo "    ✓ Fixed ggml-alloc.cpp (8 casts)"
+            ((fixed_count++))
         else
-            echo "    ℹ️  ggml-alloc.cpp already fixed"
             rm -f "$TMP_FILE"
-            rm -f Sources/WhisperCpp/src/ggml-alloc.cpp.bak
+            echo "    ℹ️  ggml-alloc.cpp already fixed"
         fi
-    else
-        echo "  ⚠️  ggml-alloc.cpp not found. Run ./setup.sh first."
+    fi
+
+    # Fix ggml-quants.cpp
+    if [ -f "Sources/WhisperCpp/src/ggml-quants.cpp" ]; then
+        echo "  → Fixing ggml-quants.cpp..."
+        TMP_FILE=$(mktemp)
+        sed -E \
+            -e 's/block_iq2_xxs \* y = vy;/block_iq2_xxs * y = (block_iq2_xxs *)vy;/g' \
+            -e 's/block_iq2_xs \* y = vy;/block_iq2_xs * y = (block_iq2_xs *)vy;/g' \
+            -e 's/block_iq3_xxs \* y = vy;/block_iq3_xxs * y = (block_iq3_xxs *)vy;/g' \
+            -e 's/block_iq3_s \* y = vy;/block_iq3_s * y = (block_iq3_s *)vy;/g' \
+            -e 's/block_iq1_s \* y = vy;/block_iq1_s * y = (block_iq1_s *)vy;/g' \
+            -e 's/block_iq1_m \* y = vy;/block_iq1_m * y = (block_iq1_m *)vy;/g' \
+            -e 's/block_iq2_s \* y = vy;/block_iq2_s * y = (block_iq2_s *)vy;/g' \
+            Sources/WhisperCpp/src/ggml-quants.cpp > "$TMP_FILE"
+        if ! diff -q Sources/WhisperCpp/src/ggml-quants.cpp "$TMP_FILE" > /dev/null 2>&1; then
+            mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-quants.cpp
+            echo "    ✓ Fixed ggml-quants.cpp (8 casts)"
+            ((fixed_count++))
+        else
+            rm -f "$TMP_FILE"
+            echo "    ℹ️  ggml-quants.cpp already fixed"
+        fi
+    fi
+
+    # Fix quants.cpp (from ggml-cpu)
+    if [ -f "Sources/WhisperCpp/src/quants.cpp" ]; then
+        echo "  → Fixing quants.cpp (CPU implementation)..."
+        TMP_FILE=$(mktemp)
+        sed -E \
+            -e 's/const block_q([0-9_K]+) \* GGML_RESTRICT x = vx;/const block_q\1 * GGML_RESTRICT x = (const block_q\1 *)vx;/g' \
+            -e 's/const block_q([0-9_K]+) \* GGML_RESTRICT y = vy;/const block_q\1 * GGML_RESTRICT y = (const block_q\1 *)vy;/g' \
+            -e 's/block_q([0-9_K]+) \* GGML_RESTRICT x = vx;/block_q\1 * GGML_RESTRICT x = (block_q\1 *)vx;/g' \
+            -e 's/block_q([0-9_K]+) \* GGML_RESTRICT y = vy;/block_q\1 * GGML_RESTRICT y = (block_q\1 *)vy;/g' \
+            -e 's/const block_iq([0-9_a-z]+) \* GGML_RESTRICT x = vx;/const block_iq\1 * GGML_RESTRICT x = (const block_iq\1 *)vx;/g' \
+            -e 's/const block_iq([0-9_a-z]+) \* GGML_RESTRICT y = vy;/const block_iq\1 * GGML_RESTRICT y = (const block_iq\1 *)vy;/g' \
+            -e 's/block_iq([0-9_a-z]+) \* GGML_RESTRICT x = vx;/block_iq\1 * GGML_RESTRICT x = (block_iq\1 *)vx;/g' \
+            -e 's/block_iq([0-9_a-z]+) \* GGML_RESTRICT y = vy;/block_iq\1 * GGML_RESTRICT y = (block_iq\1 *)vy;/g' \
+            Sources/WhisperCpp/src/quants.cpp > "$TMP_FILE"
+        if ! diff -q Sources/WhisperCpp/src/quants.cpp "$TMP_FILE" > /dev/null 2>&1; then
+            mv "$TMP_FILE" Sources/WhisperCpp/src/quants.cpp
+            echo "    ✓ Fixed quants.cpp (49 casts)"
+            ((fixed_count++))
+        else
+            rm -f "$TMP_FILE"
+            echo "    ℹ️  quants.cpp already fixed"
+        fi
+    fi
+
+    if [ $fixed_count -eq 0 ]; then
+        echo "  ℹ️  All files already fixed or not found. Run ./setup.sh if you need to set up the project."
     fi
 
     echo ""
@@ -113,7 +155,7 @@ fi
 
 # Execute fixes
 clean_xcode_data
-fix_ggml_alloc
+fix_ggml_files
 
 echo "✅ All fixes applied!"
 echo ""

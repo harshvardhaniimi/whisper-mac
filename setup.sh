@@ -45,6 +45,7 @@ cp whisper.cpp/ggml/src/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
 echo "  → GGML core sources..."
 cp whisper.cpp/ggml/src/ggml.c Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-alloc.c Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-quants.c Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-backend.cpp Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-backend-reg.cpp Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-opt.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
@@ -60,6 +61,7 @@ if [ -d "whisper.cpp/ggml/src/ggml-cpu" ]; then
     cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu.c Sources/WhisperCpp/src/ 2>/dev/null || true
     cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu-aarch64.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
     cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu-aarch64.c Sources/WhisperCpp/src/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-cpu/quants.c Sources/WhisperCpp/src/ 2>/dev/null || true
 
     # Skip llamafile, amx, and other special implementations
 fi
@@ -79,13 +81,13 @@ for file in Sources/WhisperCpp/src/*.c; do
     fi
 done
 
-# Fix C++ compilation errors in ggml-alloc.cpp
-echo "  → Fixing C++ compatibility in ggml-alloc.cpp..."
-if [ -f "Sources/WhisperCpp/src/ggml-alloc.cpp" ]; then
-    # Create a temporary file
-    TMP_FILE=$(mktemp)
+# Fix C++ compilation errors - comprehensive fixes for all ggml files
+echo "  → Fixing C++ compatibility in ggml files..."
 
-    # Fix void* pointer assignments with explicit casts
+# Fix ggml-alloc.cpp - malloc/calloc/realloc casts
+if [ -f "Sources/WhisperCpp/src/ggml-alloc.cpp" ]; then
+    echo "    Fixing ggml-alloc.cpp..."
+    TMP_FILE=$(mktemp)
     sed -E \
         -e 's/struct tallocr_chunk \* chunk = calloc\(/struct tallocr_chunk * chunk = (struct tallocr_chunk *)calloc(/g' \
         -e 's/galloc->bufts = calloc\(/galloc->bufts = (ggml_backend_buffer_type_t *)calloc(/g' \
@@ -96,10 +98,46 @@ if [ -f "Sources/WhisperCpp/src/ggml-alloc.cpp" ]; then
         -e 's/galloc->leaf_allocs = calloc\(/galloc->leaf_allocs = (struct leaf_alloc *)calloc(/g' \
         -e 's/\*buffers = realloc\(/*buffers = (ggml_backend_buffer_t *)realloc(/g' \
         Sources/WhisperCpp/src/ggml-alloc.cpp > "$TMP_FILE"
-
-    # Replace the original file
     mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-alloc.cpp
-    echo "    ✓ Fixed void* pointer assignments"
+    echo "      ✓ Fixed ggml-alloc.cpp (8 casts)"
+fi
+
+# Fix ggml-quants.cpp - block_iq* pointer casts (8 issues)
+if [ -f "Sources/WhisperCpp/src/ggml-quants.cpp" ]; then
+    echo "    Fixing ggml-quants.cpp..."
+    TMP_FILE=$(mktemp)
+    sed -E \
+        -e 's/block_iq2_xxs \* y = vy;/block_iq2_xxs * y = (block_iq2_xxs *)vy;/g' \
+        -e 's/block_iq2_xs \* y = vy;/block_iq2_xs * y = (block_iq2_xs *)vy;/g' \
+        -e 's/block_iq3_xxs \* y = vy;/block_iq3_xxs * y = (block_iq3_xxs *)vy;/g' \
+        -e 's/block_iq3_s \* y = vy;/block_iq3_s * y = (block_iq3_s *)vy;/g' \
+        -e 's/block_iq1_s \* y = vy;/block_iq1_s * y = (block_iq1_s *)vy;/g' \
+        -e 's/block_iq1_m \* y = vy;/block_iq1_m * y = (block_iq1_m *)vy;/g' \
+        -e 's/block_iq2_s \* y = vy;/block_iq2_s * y = (block_iq2_s *)vy;/g' \
+        Sources/WhisperCpp/src/ggml-quants.cpp > "$TMP_FILE"
+    mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-quants.cpp
+    echo "      ✓ Fixed ggml-quants.cpp (8 casts)"
+fi
+
+# Fix quants.cpp (from ggml-cpu) - block_q* pointer casts (49 issues)
+if [ -f "Sources/WhisperCpp/src/quants.cpp" ]; then
+    echo "    Fixing quants.cpp (CPU implementation)..."
+    TMP_FILE=$(mktemp)
+    # Fix all block_q* struct pointer assignments from void*
+    # Pattern: const block_qX_X * GGML_RESTRICT x = vx; -> add cast
+    # Pattern: block_qX_X * GGML_RESTRICT y = vy; -> add cast
+    sed -E \
+        -e 's/const block_q([0-9_K]+) \* GGML_RESTRICT x = vx;/const block_q\1 * GGML_RESTRICT x = (const block_q\1 *)vx;/g' \
+        -e 's/const block_q([0-9_K]+) \* GGML_RESTRICT y = vy;/const block_q\1 * GGML_RESTRICT y = (const block_q\1 *)vy;/g' \
+        -e 's/block_q([0-9_K]+) \* GGML_RESTRICT x = vx;/block_q\1 * GGML_RESTRICT x = (block_q\1 *)vx;/g' \
+        -e 's/block_q([0-9_K]+) \* GGML_RESTRICT y = vy;/block_q\1 * GGML_RESTRICT y = (block_q\1 *)vy;/g' \
+        -e 's/const block_iq([0-9_a-z]+) \* GGML_RESTRICT x = vx;/const block_iq\1 * GGML_RESTRICT x = (const block_iq\1 *)vx;/g' \
+        -e 's/const block_iq([0-9_a-z]+) \* GGML_RESTRICT y = vy;/const block_iq\1 * GGML_RESTRICT y = (const block_iq\1 *)vy;/g' \
+        -e 's/block_iq([0-9_a-z]+) \* GGML_RESTRICT x = vx;/block_iq\1 * GGML_RESTRICT x = (block_iq\1 *)vx;/g' \
+        -e 's/block_iq([0-9_a-z]+) \* GGML_RESTRICT y = vy;/block_iq\1 * GGML_RESTRICT y = (block_iq\1 *)vy;/g' \
+        Sources/WhisperCpp/src/quants.cpp > "$TMP_FILE"
+    mv "$TMP_FILE" Sources/WhisperCpp/src/quants.cpp
+    echo "      ✓ Fixed quants.cpp (49 casts)"
 fi
 
 # Remove problematic files if they exist
