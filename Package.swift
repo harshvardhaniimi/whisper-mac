@@ -23,17 +23,11 @@ let package = Package(
             name: "WhisperCpp",
             dependencies: [],
             path: "Sources/WhisperCpp",
-            exclude: [
-                "metal",
-                "src/llamafile",
-                "src/ggml-amx",
-                "src/sgemm.cpp",
-                "src/sgemm.h"
-            ],
             sources: ["src"],
             publicHeadersPath: "include",
             cSettings: [
                 .headerSearchPath("include"),
+                .headerSearchPath("include/ggml-cpu"),
                 .headerSearchPath("src"),
                 .define("GGML_USE_ACCELERATE"),
                 .define("GGML_USE_METAL"),
@@ -50,6 +44,7 @@ let package = Package(
             ],
             cxxSettings: [
                 .headerSearchPath("include"),
+                .headerSearchPath("include/ggml-cpu"),
                 .headerSearchPath("src"),
                 .define("GGML_USE_ACCELERATE"),
                 .define("GGML_USE_METAL"),

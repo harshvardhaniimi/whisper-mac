@@ -40,8 +40,13 @@ fastlane/test_output
 build/
 Build/
 
-# whisper.cpp clone
+# whisper.cpp clone and generated sources
 whisper.cpp/
+Sources/WhisperCpp/src/
+Sources/WhisperCpp/include/
+
+# Backup files
+*.bak
 
 # Temporary files
 *.tmp
