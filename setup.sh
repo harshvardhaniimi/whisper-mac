@@ -53,8 +53,11 @@ cp whisper.cpp/ggml/src/ggml-opt.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
 # Copy CPU implementation - only .cpp files, not special implementations
 if [ -d "whisper.cpp/ggml/src/ggml-cpu" ]; then
     echo "  → CPU implementation..."
-    # Copy headers first
-    cp whisper.cpp/ggml/src/ggml-cpu/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+    # Create ggml-cpu subdirectory in include
+    mkdir -p Sources/WhisperCpp/include/ggml-cpu
+
+    # Copy headers preserving directory structure
+    cp whisper.cpp/ggml/src/ggml-cpu/*.h Sources/WhisperCpp/include/ggml-cpu/ 2>/dev/null || true
 
     # Copy only the main CPU implementation files
     cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
