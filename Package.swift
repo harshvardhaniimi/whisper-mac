@@ -12,9 +12,7 @@ let package = Package(
             targets: ["WhisperMac"]
         )
     ],
-    dependencies: [
-        // We'll manually integrate whisper.cpp as a git submodule
-    ],
+    dependencies: [],
     targets: [
         .executableTarget(
             name: "WhisperMac",
@@ -35,7 +33,23 @@ let package = Package(
                 .define("GGML_USE_METAL"),
                 .define("ACCELERATE_NEW_LAPACK"),
                 .define("ACCELERATE_LAPACK_ILP64"),
-                .unsafeFlags(["-fno-objc-arc"]),
+                .unsafeFlags([
+                    "-fno-objc-arc",
+                    "-Wno-shorten-64-to-32",  // Suppress size_t to int warnings
+                    "-Wno-unused-function",
+                    "-Wno-unused-variable"
+                ]),
+            ],
+            cxxSettings: [
+                .headerSearchPath("include"),
+                .headerSearchPath("src"),
+                .define("GGML_USE_ACCELERATE"),
+                .define("GGML_USE_METAL"),
+                .unsafeFlags([
+                    "-Wno-shorten-64-to-32",  // Suppress size_t to int warnings
+                    "-Wno-unused-function",
+                    "-Wno-unused-variable"
+                ]),
             ],
             linkerSettings: [
                 .linkedFramework("Accelerate"),

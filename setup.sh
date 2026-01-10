@@ -25,68 +25,66 @@ else
     echo "✅ whisper.cpp already exists"
 fi
 
-# Copy necessary files from whisper.cpp to our project
+echo ""
 echo "📋 Copying whisper.cpp files..."
 
-# Copy whisper files
-cp whisper.cpp/include/whisper.h Sources/WhisperCpp/include/
+# Copy ALL whisper headers
+echo "  → Whisper headers..."
+cp whisper.cpp/include/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+
+# Copy whisper source files
+echo "  → Whisper sources..."
 cp whisper.cpp/src/whisper.cpp Sources/WhisperCpp/src/
-cp whisper.cpp/src/whisper-arch.h Sources/WhisperCpp/include/
+cp whisper.cpp/src/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
 
-# Copy ggml headers (main includes)
-cp whisper.cpp/ggml/include/ggml.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml/include/ggml-alloc.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml/include/ggml-backend.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml/include/ggml-cpu.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml/include/ggml-metal.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml/include/gguf.h Sources/WhisperCpp/include/
+# Copy ALL ggml headers from include directory
+echo "  → GGML headers..."
+cp whisper.cpp/ggml/include/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
 
-# Copy ggml source files
+# Copy ggml source files and implementation headers
+echo "  → GGML sources..."
 cp whisper.cpp/ggml/src/ggml.c Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-alloc.c Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-backend.cpp Sources/WhisperCpp/src/
-cp whisper.cpp/ggml/src/ggml-backend-impl.h Sources/WhisperCpp/include/
 cp whisper.cpp/ggml/src/ggml-backend-reg.cpp Sources/WhisperCpp/src/
-cp whisper.cpp/ggml/src/ggml-common.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml/src/ggml-impl.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/src/ggml-opt.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
+cp whisper.cpp/ggml/src/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
 
 # Copy CPU implementation
 if [ -d "whisper.cpp/ggml/src/ggml-cpu" ]; then
-    echo "📋 Copying CPU implementation..."
-    cp whisper.cpp/ggml/src/ggml-cpu/*.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
-    cp whisper.cpp/ggml/src/ggml-cpu/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
-    cp whisper.cpp/ggml/src/ggml-cpu/*.c Sources/WhisperCpp/src/ 2>/dev/null || true
+    echo "  → CPU implementation..."
+    cp -r whisper.cpp/ggml/src/ggml-cpu/* Sources/WhisperCpp/src/ 2>/dev/null || true
+    # Move headers to include
+    mv Sources/WhisperCpp/src/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
 fi
 
-# Copy Metal implementation if it exists
+# Copy Metal implementation
 if [ -d "whisper.cpp/ggml/src/ggml-metal" ]; then
-    echo "📋 Copying Metal implementation..."
-    # Copy all headers from metal directory
+    echo "  → Metal implementation..."
+    # Copy all Metal files
     cp whisper.cpp/ggml/src/ggml-metal/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
-    # Copy implementation files
     cp whisper.cpp/ggml/src/ggml-metal/*.m Sources/WhisperCpp/src/ 2>/dev/null || true
     cp whisper.cpp/ggml/src/ggml-metal/*.mm Sources/WhisperCpp/src/ 2>/dev/null || true
     cp whisper.cpp/ggml/src/ggml-metal/*.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
-    # Copy metal shaders
     cp whisper.cpp/ggml/src/ggml-metal/*.metal Sources/WhisperCpp/metal/ 2>/dev/null || true
 fi
 
 # Rename .c files to .cpp for Swift Package Manager
-echo "🔧 Preparing source files..."
+echo "  → Converting .c to .cpp..."
 for file in Sources/WhisperCpp/src/*.c; do
     if [ -f "$file" ]; then
         mv "$file" "${file%.c}.cpp"
     fi
 done
 
+# List what we got
 echo ""
 echo "✅ Setup complete!"
 echo ""
-echo "Files copied:"
-echo "  - Whisper headers and implementation"
-echo "  - GGML core files (ggml.h, gguf.h, ggml-alloc.h, etc.)"
-echo "  - CPU optimization files"
-echo "  - Metal GPU acceleration files"
+echo "📊 Files summary:"
+echo "  Headers: $(ls -1 Sources/WhisperCpp/include/*.h 2>/dev/null | wc -l | tr -d ' ')"
+echo "  Sources: $(ls -1 Sources/WhisperCpp/src/*.{cpp,m,mm} 2>/dev/null | wc -l | tr -d ' ')"
+echo "  Metal shaders: $(ls -1 Sources/WhisperCpp/metal/*.metal 2>/dev/null | wc -l | tr -d ' ')"
 echo ""
 echo "Next steps:"
 echo "1. Open the project in Xcode:"
