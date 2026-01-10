@@ -15,6 +15,7 @@ fi
 echo "📁 Creating directory structure..."
 mkdir -p Sources/WhisperCpp/include
 mkdir -p Sources/WhisperCpp/src
+mkdir -p Sources/WhisperCpp/metal
 
 # Clone whisper.cpp if it doesn't exist
 if [ ! -d "whisper.cpp" ]; then
@@ -43,13 +44,25 @@ cp whisper.cpp/ggml/include/ggml-metal.h Sources/WhisperCpp/include/
 cp whisper.cpp/ggml/src/ggml.c Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-alloc.c Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-backend.cpp Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-backend-impl.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/src/ggml-backend-reg.cpp Sources/WhisperCpp/src/
 cp whisper.cpp/ggml/src/ggml-common.h Sources/WhisperCpp/include/
 cp whisper.cpp/ggml/src/ggml-impl.h Sources/WhisperCpp/include/
 
+# Copy CPU implementation
+if [ -d "whisper.cpp/ggml/src/ggml-cpu" ]; then
+    echo "📋 Copying CPU implementation..."
+    cp whisper.cpp/ggml/src/ggml-cpu/*.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-cpu/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+fi
+
 # Copy Metal implementation if it exists
 if [ -d "whisper.cpp/ggml/src/ggml-metal" ]; then
+    echo "📋 Copying Metal implementation..."
+    cp whisper.cpp/ggml/src/ggml-metal/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
     cp whisper.cpp/ggml/src/ggml-metal/*.m Sources/WhisperCpp/src/ 2>/dev/null || true
-    cp whisper.cpp/ggml/src/ggml-metal/*.metal Sources/WhisperCpp/src/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-metal/*.metal Sources/WhisperCpp/metal/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-metal/*.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
 fi
 
 # Rename .c files to .cpp for Swift Package Manager

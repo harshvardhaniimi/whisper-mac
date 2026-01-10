@@ -19,19 +19,20 @@ let package = Package(
         .executableTarget(
             name: "WhisperMac",
             dependencies: ["WhisperCpp"],
-            path: "Sources/WhisperMac",
-            resources: [
-                .process("Resources")
-            ]
+            path: "Sources/WhisperMac"
         ),
         .target(
             name: "WhisperCpp",
             dependencies: [],
             path: "Sources/WhisperCpp",
+            exclude: ["metal"],
+            sources: ["src"],
             publicHeadersPath: "include",
             cSettings: [
-                .headerSearchPath("."),
+                .headerSearchPath("include"),
+                .headerSearchPath("src"),
                 .define("GGML_USE_ACCELERATE"),
+                .define("GGML_USE_METAL"),
                 .define("ACCELERATE_NEW_LAPACK"),
                 .define("ACCELERATE_LAPACK_ILP64"),
                 .unsafeFlags(["-fno-objc-arc"]),
@@ -39,8 +40,10 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("Accelerate"),
                 .linkedFramework("Metal"),
-                .linkedFramework("MetalKit")
+                .linkedFramework("MetalKit"),
+                .linkedFramework("Foundation")
             ]
         )
-    ]
+    ],
+    cxxLanguageStandard: .cxx17
 )
