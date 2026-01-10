@@ -26,14 +26,31 @@ fi
 
 # Copy necessary files from whisper.cpp to our project
 echo "📋 Copying whisper.cpp files..."
-cp whisper.cpp/whisper.h Sources/WhisperCpp/include/
-cp whisper.cpp/whisper.cpp Sources/WhisperCpp/src/
-cp whisper.cpp/ggml.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml.c Sources/WhisperCpp/src/
-cp whisper.cpp/ggml-alloc.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml-alloc.c Sources/WhisperCpp/src/
-cp whisper.cpp/ggml-backend.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml-backend.c Sources/WhisperCpp/src/
+
+# Copy whisper files
+cp whisper.cpp/include/whisper.h Sources/WhisperCpp/include/
+cp whisper.cpp/src/whisper.cpp Sources/WhisperCpp/src/
+cp whisper.cpp/src/whisper-arch.h Sources/WhisperCpp/include/
+
+# Copy ggml headers
+cp whisper.cpp/ggml/include/ggml.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/include/ggml-alloc.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/include/ggml-backend.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/include/ggml-cpu.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/include/ggml-metal.h Sources/WhisperCpp/include/
+
+# Copy ggml source files
+cp whisper.cpp/ggml/src/ggml.c Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-alloc.c Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-backend.cpp Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-common.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/src/ggml-impl.h Sources/WhisperCpp/include/
+
+# Copy Metal implementation if it exists
+if [ -d "whisper.cpp/ggml/src/ggml-metal" ]; then
+    cp whisper.cpp/ggml/src/ggml-metal/*.m Sources/WhisperCpp/src/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-metal/*.metal Sources/WhisperCpp/src/ 2>/dev/null || true
+fi
 
 # Rename .c files to .cpp for Swift Package Manager
 echo "🔧 Preparing source files..."
