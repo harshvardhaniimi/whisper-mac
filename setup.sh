@@ -87,60 +87,54 @@ done
 # Fix C++ compilation errors - comprehensive fixes for all ggml files
 echo "  → Fixing C++ compatibility in ggml files..."
 
-# Fix ggml-alloc.cpp - malloc/calloc/realloc casts
-if [ -f "Sources/WhisperCpp/src/ggml-alloc.cpp" ]; then
-    echo "    Fixing ggml-alloc.cpp..."
-    TMP_FILE=$(mktemp)
-    sed -E \
-        -e 's/struct tallocr_chunk \* chunk = calloc\(/struct tallocr_chunk * chunk = (struct tallocr_chunk *)calloc(/g' \
-        -e 's/galloc->bufts = calloc\(/galloc->bufts = (ggml_backend_buffer_type_t *)calloc(/g' \
-        -e 's/galloc->buffers = calloc\(/galloc->buffers = (struct vbuffer **)calloc(/g' \
-        -e 's/galloc->buf_tallocs = calloc\(/galloc->buf_tallocs = (struct ggml_dyn_tallocr **)calloc(/g' \
-        -e 's/galloc->hash_values = malloc\(/galloc->hash_values = (struct hash_node *)malloc(/g' \
-        -e 's/galloc->node_allocs = calloc\(/galloc->node_allocs = (struct node_alloc *)calloc(/g' \
-        -e 's/galloc->leaf_allocs = calloc\(/galloc->leaf_allocs = (struct leaf_alloc *)calloc(/g' \
-        -e 's/\*buffers = realloc\(/*buffers = (ggml_backend_buffer_t *)realloc(/g' \
-        Sources/WhisperCpp/src/ggml-alloc.cpp > "$TMP_FILE"
-    mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-alloc.cpp
-    echo "      ✓ Fixed ggml-alloc.cpp (8 casts)"
-fi
+# Check if Python is available
+if command -v python3 &> /dev/null; then
+    chmod +x fix-cpp-compat.py 2>/dev/null || true
 
-# Fix ggml-quants.cpp - block_iq* pointer casts (8 issues)
-if [ -f "Sources/WhisperCpp/src/ggml-quants.cpp" ]; then
-    echo "    Fixing ggml-quants.cpp..."
-    TMP_FILE=$(mktemp)
-    sed -E \
-        -e 's/block_iq2_xxs \* y = vy;/block_iq2_xxs * y = (block_iq2_xxs *)vy;/g' \
-        -e 's/block_iq2_xs \* y = vy;/block_iq2_xs * y = (block_iq2_xs *)vy;/g' \
-        -e 's/block_iq3_xxs \* y = vy;/block_iq3_xxs * y = (block_iq3_xxs *)vy;/g' \
-        -e 's/block_iq3_s \* y = vy;/block_iq3_s * y = (block_iq3_s *)vy;/g' \
-        -e 's/block_iq1_s \* y = vy;/block_iq1_s * y = (block_iq1_s *)vy;/g' \
-        -e 's/block_iq1_m \* y = vy;/block_iq1_m * y = (block_iq1_m *)vy;/g' \
-        -e 's/block_iq2_s \* y = vy;/block_iq2_s * y = (block_iq2_s *)vy;/g' \
-        Sources/WhisperCpp/src/ggml-quants.cpp > "$TMP_FILE"
-    mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-quants.cpp
-    echo "      ✓ Fixed ggml-quants.cpp (8 casts)"
-fi
+    # Fix ggml-alloc.cpp
+    if [ -f "Sources/WhisperCpp/src/ggml-alloc.cpp" ]; then
+        echo "    Fixing ggml-alloc.cpp..."
+        TMP_FILE=$(mktemp)
+        sed -E \
+            -e 's/struct tallocr_chunk \* chunk = calloc\(/struct tallocr_chunk * chunk = (struct tallocr_chunk *)calloc(/g' \
+            -e 's/galloc->bufts = calloc\(/galloc->bufts = (ggml_backend_buffer_type_t *)calloc(/g' \
+            -e 's/galloc->buffers = calloc\(/galloc->buffers = (struct vbuffer **)calloc(/g' \
+            -e 's/galloc->buf_tallocs = calloc\(/galloc->buf_tallocs = (struct ggml_dyn_tallocr **)calloc(/g' \
+            -e 's/galloc->hash_values = malloc\(/galloc->hash_values = (struct hash_node *)malloc(/g' \
+            -e 's/galloc->node_allocs = calloc\(/galloc->node_allocs = (struct node_alloc *)calloc(/g' \
+            -e 's/galloc->leaf_allocs = calloc\(/galloc->leaf_allocs = (struct leaf_alloc *)calloc(/g' \
+            -e 's/\*buffers = realloc\(/*buffers = (ggml_backend_buffer_t *)realloc(/g' \
+            Sources/WhisperCpp/src/ggml-alloc.cpp > "$TMP_FILE"
+        mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-alloc.cpp
+        echo "      ✓ Fixed ggml-alloc.cpp"
+    fi
 
-# Fix quants.cpp (from ggml-cpu) - block_q* pointer casts (49 issues)
-if [ -f "Sources/WhisperCpp/src/quants.cpp" ]; then
-    echo "    Fixing quants.cpp (CPU implementation)..."
-    TMP_FILE=$(mktemp)
-    # Fix all block_q* struct pointer assignments from void*
-    # Pattern: const block_qX_X * GGML_RESTRICT x = vx; -> add cast
-    # Pattern: block_qX_X * GGML_RESTRICT y = vy; -> add cast
-    sed -E \
-        -e 's/const block_q([0-9_K]+) \* GGML_RESTRICT x = vx;/const block_q\1 * GGML_RESTRICT x = (const block_q\1 *)vx;/g' \
-        -e 's/const block_q([0-9_K]+) \* GGML_RESTRICT y = vy;/const block_q\1 * GGML_RESTRICT y = (const block_q\1 *)vy;/g' \
-        -e 's/block_q([0-9_K]+) \* GGML_RESTRICT x = vx;/block_q\1 * GGML_RESTRICT x = (block_q\1 *)vx;/g' \
-        -e 's/block_q([0-9_K]+) \* GGML_RESTRICT y = vy;/block_q\1 * GGML_RESTRICT y = (block_q\1 *)vy;/g' \
-        -e 's/const block_iq([0-9_a-z]+) \* GGML_RESTRICT x = vx;/const block_iq\1 * GGML_RESTRICT x = (const block_iq\1 *)vx;/g' \
-        -e 's/const block_iq([0-9_a-z]+) \* GGML_RESTRICT y = vy;/const block_iq\1 * GGML_RESTRICT y = (const block_iq\1 *)vy;/g' \
-        -e 's/block_iq([0-9_a-z]+) \* GGML_RESTRICT x = vx;/block_iq\1 * GGML_RESTRICT x = (block_iq\1 *)vx;/g' \
-        -e 's/block_iq([0-9_a-z]+) \* GGML_RESTRICT y = vy;/block_iq\1 * GGML_RESTRICT y = (block_iq\1 *)vy;/g' \
-        Sources/WhisperCpp/src/quants.cpp > "$TMP_FILE"
-    mv "$TMP_FILE" Sources/WhisperCpp/src/quants.cpp
-    echo "      ✓ Fixed quants.cpp (49 casts)"
+    # Fix quants.cpp with Python script
+    if [ -f "Sources/WhisperCpp/src/quants.cpp" ]; then
+        echo "    Fixing quants.cpp (comprehensive)..."
+        python3 fix-cpp-compat.py Sources/WhisperCpp/src/quants.cpp Sources/WhisperCpp/src/quants.cpp.tmp
+        mv Sources/WhisperCpp/src/quants.cpp.tmp Sources/WhisperCpp/src/quants.cpp
+        echo "      ✓ Fixed quants.cpp"
+    fi
+
+    # Fix ggml-quants.cpp with Python script
+    if [ -f "Sources/WhisperCpp/src/ggml-quants.cpp" ]; then
+        echo "    Fixing ggml-quants.cpp (comprehensive)..."
+        python3 fix-cpp-compat.py Sources/WhisperCpp/src/ggml-quants.cpp Sources/WhisperCpp/src/ggml-quants.cpp.tmp
+        mv Sources/WhisperCpp/src/ggml-quants.cpp.tmp Sources/WhisperCpp/src/ggml-quants.cpp
+        echo "      ✓ Fixed ggml-quants.cpp"
+    fi
+
+    # Fix ggml.cpp (add version defines)
+    if [ -f "Sources/WhisperCpp/src/ggml.cpp" ]; then
+        echo "    Adding version defines to ggml.cpp..."
+        python3 fix-cpp-compat.py Sources/WhisperCpp/src/ggml.cpp Sources/WhisperCpp/src/ggml.cpp.tmp
+        mv Sources/WhisperCpp/src/ggml.cpp.tmp Sources/WhisperCpp/src/ggml.cpp
+        echo "      ✓ Fixed ggml.cpp"
+    fi
+else
+    echo "    ⚠️  Python3 not found - skipping advanced fixes"
+    echo "    Please install Python3 or fix errors manually"
 fi
 
 # Remove problematic files if they exist
