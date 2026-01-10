@@ -86,6 +86,20 @@ swift run
 
 ## Troubleshooting
 
+### Build Errors (Invalid Exclude, C++ Compilation Errors)
+
+If you encounter any build errors, run the fix script:
+```bash
+./fix-build.sh
+```
+
+This will automatically fix:
+- Invalid Exclude path errors
+- C++ compilation errors in ggml-alloc
+- Xcode derived data issues
+
+For detailed troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
 ### "Command Line Tools not found"
 
 Install Xcode Command Line Tools:
@@ -98,6 +112,11 @@ xcode-select --install
 Make sure you've run the setup script:
 ```bash
 ./setup.sh
+```
+
+If issues persist after setup:
+```bash
+./fix-build.sh
 ```
 
 ### Microphone permission denied

@@ -79,6 +79,29 @@ for file in Sources/WhisperCpp/src/*.c; do
     fi
 done
 
+# Fix C++ compilation errors in ggml-alloc.cpp
+echo "  → Fixing C++ compatibility in ggml-alloc.cpp..."
+if [ -f "Sources/WhisperCpp/src/ggml-alloc.cpp" ]; then
+    # Create a temporary file
+    TMP_FILE=$(mktemp)
+
+    # Fix void* pointer assignments with explicit casts
+    sed -E \
+        -e 's/struct tallocr_chunk \* chunk = calloc\(/struct tallocr_chunk * chunk = (struct tallocr_chunk *)calloc(/g' \
+        -e 's/galloc->bufts = calloc\(/galloc->bufts = (ggml_backend_buffer_type_t *)calloc(/g' \
+        -e 's/galloc->buffers = calloc\(/galloc->buffers = (struct vbuffer **)calloc(/g' \
+        -e 's/galloc->buf_tallocs = calloc\(/galloc->buf_tallocs = (struct ggml_dyn_tallocr **)calloc(/g' \
+        -e 's/galloc->hash_values = malloc\(/galloc->hash_values = (struct hash_node *)malloc(/g' \
+        -e 's/galloc->node_allocs = calloc\(/galloc->node_allocs = (struct node_alloc *)calloc(/g' \
+        -e 's/galloc->leaf_allocs = calloc\(/galloc->leaf_allocs = (struct leaf_alloc *)calloc(/g' \
+        -e 's/\*buffers = realloc\(/*buffers = (ggml_backend_buffer_t *)realloc(/g' \
+        Sources/WhisperCpp/src/ggml-alloc.cpp > "$TMP_FILE"
+
+    # Replace the original file
+    mv "$TMP_FILE" Sources/WhisperCpp/src/ggml-alloc.cpp
+    echo "    ✓ Fixed void* pointer assignments"
+fi
+
 # Remove problematic files if they exist
 echo "  → Cleaning up..."
 rm -f Sources/WhisperCpp/src/sgemm.cpp 2>/dev/null || true
