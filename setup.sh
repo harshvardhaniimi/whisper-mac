@@ -33,12 +33,13 @@ cp whisper.cpp/include/whisper.h Sources/WhisperCpp/include/
 cp whisper.cpp/src/whisper.cpp Sources/WhisperCpp/src/
 cp whisper.cpp/src/whisper-arch.h Sources/WhisperCpp/include/
 
-# Copy ggml headers
+# Copy ggml headers (main includes)
 cp whisper.cpp/ggml/include/ggml.h Sources/WhisperCpp/include/
 cp whisper.cpp/ggml/include/ggml-alloc.h Sources/WhisperCpp/include/
 cp whisper.cpp/ggml/include/ggml-backend.h Sources/WhisperCpp/include/
 cp whisper.cpp/ggml/include/ggml-cpu.h Sources/WhisperCpp/include/
 cp whisper.cpp/ggml/include/ggml-metal.h Sources/WhisperCpp/include/
+cp whisper.cpp/ggml/include/gguf.h Sources/WhisperCpp/include/
 
 # Copy ggml source files
 cp whisper.cpp/ggml/src/ggml.c Sources/WhisperCpp/src/
@@ -54,15 +55,20 @@ if [ -d "whisper.cpp/ggml/src/ggml-cpu" ]; then
     echo "📋 Copying CPU implementation..."
     cp whisper.cpp/ggml/src/ggml-cpu/*.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
     cp whisper.cpp/ggml/src/ggml-cpu/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-cpu/*.c Sources/WhisperCpp/src/ 2>/dev/null || true
 fi
 
 # Copy Metal implementation if it exists
 if [ -d "whisper.cpp/ggml/src/ggml-metal" ]; then
     echo "📋 Copying Metal implementation..."
+    # Copy all headers from metal directory
     cp whisper.cpp/ggml/src/ggml-metal/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+    # Copy implementation files
     cp whisper.cpp/ggml/src/ggml-metal/*.m Sources/WhisperCpp/src/ 2>/dev/null || true
-    cp whisper.cpp/ggml/src/ggml-metal/*.metal Sources/WhisperCpp/metal/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-metal/*.mm Sources/WhisperCpp/src/ 2>/dev/null || true
     cp whisper.cpp/ggml/src/ggml-metal/*.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
+    # Copy metal shaders
+    cp whisper.cpp/ggml/src/ggml-metal/*.metal Sources/WhisperCpp/metal/ 2>/dev/null || true
 fi
 
 # Rename .c files to .cpp for Swift Package Manager
@@ -76,14 +82,22 @@ done
 echo ""
 echo "✅ Setup complete!"
 echo ""
+echo "Files copied:"
+echo "  - Whisper headers and implementation"
+echo "  - GGML core files (ggml.h, gguf.h, ggml-alloc.h, etc.)"
+echo "  - CPU optimization files"
+echo "  - Metal GPU acceleration files"
+echo ""
 echo "Next steps:"
 echo "1. Open the project in Xcode:"
 echo "   open Package.swift"
 echo ""
-echo "2. Build the project (⌘+B)"
+echo "2. Clean build folder (⇧⌘K)"
 echo ""
-echo "3. Run the app (⌘+R)"
+echo "3. Build the project (⌘+B)"
 echo ""
-echo "Note: The app will need to download Whisper models on first use."
+echo "4. Run the app (⌘+R)"
+echo ""
+echo "Note: The app will download Whisper models automatically on first launch."
 echo "      Models are stored in ~/Library/Application Support/WhisperMac/models/"
 echo ""
