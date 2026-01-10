@@ -23,7 +23,13 @@ let package = Package(
             name: "WhisperCpp",
             dependencies: [],
             path: "Sources/WhisperCpp",
-            exclude: ["metal"],
+            exclude: [
+                "metal",
+                "src/llamafile",
+                "src/ggml-amx",
+                "src/sgemm.cpp",
+                "src/sgemm.h"
+            ],
             sources: ["src"],
             publicHeadersPath: "include",
             cSettings: [
@@ -35,9 +41,11 @@ let package = Package(
                 .define("ACCELERATE_LAPACK_ILP64"),
                 .unsafeFlags([
                     "-fno-objc-arc",
-                    "-Wno-shorten-64-to-32",  // Suppress size_t to int warnings
+                    "-Wno-shorten-64-to-32",
+                    "-Wno-implicit-int-conversion",
                     "-Wno-unused-function",
-                    "-Wno-unused-variable"
+                    "-Wno-unused-variable",
+                    "-Wno-deprecated-declarations"
                 ]),
             ],
             cxxSettings: [
@@ -46,9 +54,11 @@ let package = Package(
                 .define("GGML_USE_ACCELERATE"),
                 .define("GGML_USE_METAL"),
                 .unsafeFlags([
-                    "-Wno-shorten-64-to-32",  // Suppress size_t to int warnings
+                    "-Wno-shorten-64-to-32",
+                    "-Wno-implicit-int-conversion",
                     "-Wno-unused-function",
-                    "-Wno-unused-variable"
+                    "-Wno-unused-variable",
+                    "-Wno-deprecated-declarations"
                 ]),
             ],
             linkerSettings: [
