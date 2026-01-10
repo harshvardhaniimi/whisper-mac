@@ -24,36 +24,85 @@ else
     echo "✅ whisper.cpp already exists"
 fi
 
-# Copy necessary files from whisper.cpp to our project
+echo ""
 echo "📋 Copying whisper.cpp files..."
-cp whisper.cpp/whisper.h Sources/WhisperCpp/include/
-cp whisper.cpp/whisper.cpp Sources/WhisperCpp/src/
-cp whisper.cpp/ggml.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml.c Sources/WhisperCpp/src/
-cp whisper.cpp/ggml-alloc.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml-alloc.c Sources/WhisperCpp/src/
-cp whisper.cpp/ggml-backend.h Sources/WhisperCpp/include/
-cp whisper.cpp/ggml-backend.c Sources/WhisperCpp/src/
+
+# Copy whisper headers
+echo "  → Whisper headers..."
+cp whisper.cpp/include/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+cp whisper.cpp/src/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+
+# Copy whisper source
+echo "  → Whisper sources..."
+cp whisper.cpp/src/whisper.cpp Sources/WhisperCpp/src/
+
+# Copy ggml headers
+echo "  → GGML headers..."
+cp whisper.cpp/ggml/include/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+cp whisper.cpp/ggml/src/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+
+# Copy ggml core sources
+echo "  → GGML core sources..."
+cp whisper.cpp/ggml/src/ggml.c Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-alloc.c Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-backend.cpp Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-backend-reg.cpp Sources/WhisperCpp/src/
+cp whisper.cpp/ggml/src/ggml-opt.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
+
+# Copy CPU implementation - only .cpp files, not special implementations
+if [ -d "whisper.cpp/ggml/src/ggml-cpu" ]; then
+    echo "  → CPU implementation..."
+    # Copy headers first
+    cp whisper.cpp/ggml/src/ggml-cpu/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+
+    # Copy only the main CPU implementation files
+    cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu.c Sources/WhisperCpp/src/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu-aarch64.cpp Sources/WhisperCpp/src/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-cpu/ggml-cpu-aarch64.c Sources/WhisperCpp/src/ 2>/dev/null || true
+
+    # Skip llamafile, amx, and other special implementations
+fi
+
+# Copy Metal implementation
+if [ -d "whisper.cpp/ggml/src/ggml-metal" ]; then
+    echo "  → Metal implementation..."
+    cp whisper.cpp/ggml/src/ggml-metal/*.h Sources/WhisperCpp/include/ 2>/dev/null || true
+    cp whisper.cpp/ggml/src/ggml-metal/ggml-metal.m Sources/WhisperCpp/src/ 2>/dev/null || true
+fi
 
 # Rename .c files to .cpp for Swift Package Manager
-echo "🔧 Preparing source files..."
+echo "  → Converting .c to .cpp..."
 for file in Sources/WhisperCpp/src/*.c; do
     if [ -f "$file" ]; then
         mv "$file" "${file%.c}.cpp"
     fi
 done
 
+# Remove problematic files if they exist
+echo "  → Cleaning up..."
+rm -f Sources/WhisperCpp/src/sgemm.cpp 2>/dev/null || true
+rm -f Sources/WhisperCpp/include/sgemm.h 2>/dev/null || true
+
 echo ""
 echo "✅ Setup complete!"
+echo ""
+echo "📊 Files summary:"
+HEADERS=$(ls -1 Sources/WhisperCpp/include/*.h 2>/dev/null | wc -l | tr -d ' ')
+SOURCES=$(ls -1 Sources/WhisperCpp/src/*.{cpp,m,mm} 2>/dev/null | wc -l | tr -d ' ')
+echo "  Headers: $HEADERS"
+echo "  Sources: $SOURCES"
 echo ""
 echo "Next steps:"
 echo "1. Open the project in Xcode:"
 echo "   open Package.swift"
 echo ""
-echo "2. Build the project (⌘+B)"
+echo "2. Clean build folder (⇧⌘K)"
 echo ""
-echo "3. Run the app (⌘+R)"
+echo "3. Build the project (⌘+B)"
 echo ""
-echo "Note: The app will need to download Whisper models on first use."
+echo "4. Run the app (⌘+R)"
+echo ""
+echo "Note: The app will download Whisper models automatically on first launch."
 echo "      Models are stored in ~/Library/Application Support/WhisperMac/models/"
 echo ""
