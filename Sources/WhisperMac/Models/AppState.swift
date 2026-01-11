@@ -1,5 +1,7 @@
 import SwiftUI
 import Combine
+import UserNotifications
+import AppKit
 
 @MainActor
 class AppState: ObservableObject {

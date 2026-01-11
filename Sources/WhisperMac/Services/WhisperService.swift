@@ -1,4 +1,5 @@
 import Foundation
+import WhisperCpp
 
 actor WhisperService {
     private var currentContext: OpaquePointer?
@@ -62,9 +63,9 @@ actor WhisperService {
         params.translate = false
 
         if let language = language {
-            params.language = strdup(language)
+            params.language = language.withCString { strdup($0) }
         } else {
-            params.language = strdup("auto")
+            params.language = "auto".withCString { strdup($0) }
         }
 
         // Run transcription
@@ -116,45 +117,6 @@ actor WhisperService {
             whisper_free(context)
         }
     }
-}
-
-// Placeholder C function declarations (will be replaced by actual whisper.cpp bridge)
-func whisper_init_from_file(_ path: String) -> OpaquePointer? {
-    // This will be implemented via whisper.cpp bridge
-    return nil
-}
-
-func whisper_free(_ context: OpaquePointer) {
-    // This will be implemented via whisper.cpp bridge
-}
-
-func whisper_full_default_params(_ strategy: Int32) -> WhisperFullParams {
-    return WhisperFullParams()
-}
-
-func whisper_full(_ context: OpaquePointer, _ params: WhisperFullParams, _ samples: UnsafePointer<Float>?, _ numSamples: Int32) -> Int32 {
-    // This will be implemented via whisper.cpp bridge
-    return 0
-}
-
-func whisper_full_n_segments(_ context: OpaquePointer) -> Int32 {
-    // This will be implemented via whisper.cpp bridge
-    return 0
-}
-
-func whisper_full_get_segment_text(_ context: OpaquePointer, _ segment: Int32) -> UnsafePointer<CChar>? {
-    // This will be implemented via whisper.cpp bridge
-    return nil
-}
-
-let WHISPER_SAMPLING_GREEDY: Int32 = 0
-
-struct WhisperFullParams {
-    var print_progress = false
-    var print_timestamps = false
-    var print_realtime = false
-    var translate = false
-    var language: UnsafeMutablePointer<CChar>? = nil
 }
 
 enum TranscriptionError: LocalizedError {
