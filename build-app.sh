@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Build the app
+echo "🔨 Building WhisperMac..."
 swift build -c release
 
 # Create app bundle structure
@@ -17,6 +18,10 @@ rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR"
 mkdir -p "$RESOURCES_DIR"
 
+# Generate app icon
+echo "🎨 Generating app icon..."
+swift scripts/generate-icon.swift "$RESOURCES_DIR"
+
 # Copy executable
 cp .build/release/WhisperMac "$MACOS_DIR/"
 
@@ -30,6 +35,8 @@ cat > "$CONTENTS_DIR/Info.plist" << 'PLIST'
     <string>en</string>
     <key>CFBundleExecutable</key>
     <string>WhisperMac</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.whisper.mac</string>
     <key>CFBundleInfoDictionaryVersion</key>
@@ -51,7 +58,7 @@ cat > "$CONTENTS_DIR/Info.plist" << 'PLIST'
     <key>NSAppleEventsUsageDescription</key>
     <string>WhisperMac needs to send keystrokes to insert transcribed text at your cursor position.</string>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright 2024. All rights reserved.</string>
+    <string>Copyright 2024. MIT License.</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSSupportsAutomaticTermination</key>
@@ -64,5 +71,6 @@ cat > "$CONTENTS_DIR/Info.plist" << 'PLIST'
 </plist>
 PLIST
 
-echo "App bundle created: $APP_DIR"
-echo "To run: open $APP_DIR"
+echo ""
+echo "✅ App bundle created: $APP_DIR"
+echo "   To run: open $APP_DIR"

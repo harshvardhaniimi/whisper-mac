@@ -21,6 +21,10 @@ rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}/${APP_NAME}.app/Contents/MacOS"
 mkdir -p "${BUILD_DIR}/${APP_NAME}.app/Contents/Resources"
 
+# Generate app icon
+echo "🎨 Generating app icon..."
+swift scripts/generate-icon.swift "${BUILD_DIR}/${APP_NAME}.app/Contents/Resources"
+
 # Copy executable
 cp .build/release/WhisperMac "${BUILD_DIR}/${APP_NAME}.app/Contents/MacOS/"
 
@@ -34,6 +38,8 @@ cat > "${BUILD_DIR}/${APP_NAME}.app/Contents/Info.plist" << PLIST
     <string>en</string>
     <key>CFBundleExecutable</key>
     <string>${APP_NAME}</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.whisper.mac</string>
     <key>CFBundleInfoDictionaryVersion</key>
