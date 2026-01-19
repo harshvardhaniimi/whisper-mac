@@ -8,7 +8,8 @@ set -e
 VERSION=${1:-"1.0.0"}
 APP_NAME="WhisperMac"
 BUILD_DIR=".build/release-${VERSION}"
-ZIP_NAME="${APP_NAME}-v${VERSION}.zip"
+ZIP_NAME_VERSIONED="${APP_NAME}-v${VERSION}.zip"
+ZIP_NAME_LATEST="${APP_NAME}.zip"
 
 echo "🔨 Building ${APP_NAME} v${VERSION}..."
 
@@ -63,22 +64,25 @@ cat > "${BUILD_DIR}/${APP_NAME}.app/Contents/Info.plist" << PLIST
 </plist>
 PLIST
 
-# Create zip for distribution
-echo "📦 Creating ${ZIP_NAME}..."
+# Create zips for distribution
+echo "📦 Creating release zips..."
 cd "${BUILD_DIR}"
-zip -r "../../${ZIP_NAME}" "${APP_NAME}.app"
+zip -r "../../${ZIP_NAME_VERSIONED}" "${APP_NAME}.app"
+zip -r "../../${ZIP_NAME_LATEST}" "${APP_NAME}.app"
 cd ../..
 
 echo ""
 echo "✅ Release created successfully!"
 echo ""
 echo "   App:  ${BUILD_DIR}/${APP_NAME}.app"
-echo "   Zip:  ${ZIP_NAME}"
+echo "   Zips: ${ZIP_NAME_VERSIONED} (for archives)"
+echo "         ${ZIP_NAME_LATEST} (for 'latest' download link)"
 echo ""
 echo "📝 Next steps:"
 echo "   1. Test the app: open '${BUILD_DIR}/${APP_NAME}.app'"
-echo "   2. Create GitHub release and upload ${ZIP_NAME}"
-echo "   3. Share the download link with testers"
+echo "   2. Create GitHub release v${VERSION}"
+echo "   3. Upload BOTH zip files to the release"
+echo "   4. The docs page 'latest' link will automatically work"
 echo ""
 echo "⚠️  Testers will need to:"
 echo "   - Right-click → Open (first time, to bypass Gatekeeper)"
