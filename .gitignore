@@ -1,5 +1,6 @@
 # Xcode
 .DS_Store
+.Rhistory
 *.swp
 *~.nib
 *.xcworkspace
@@ -39,6 +40,8 @@ fastlane/test_output
 # Build files
 build/
 Build/
+WhisperMac.app/
+*.zip
 
 # whisper.cpp clone and generated sources
 whisper.cpp/
