@@ -25,8 +25,8 @@ class TextInsertionService {
     }
 
     private func simulatePaste() {
-        // Get the current focused application
-        guard let app = NSWorkspace.shared.frontmostApplication else {
+        // Check if there's a frontmost application
+        guard NSWorkspace.shared.frontmostApplication != nil else {
             print("No frontmost application")
             return
         }

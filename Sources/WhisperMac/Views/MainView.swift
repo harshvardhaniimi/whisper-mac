@@ -73,6 +73,13 @@ struct MainView: View {
                     .environmentObject(appState)
                     .frame(width: 500, height: 400)
             }
+
+            Button(action: {
+                NSApplication.shared.terminate(nil)
+            }) {
+                Image(systemName: "xmark.circle")
+            }
+            .buttonStyle(IconButtonStyle())
         }
         .padding(DesignSystem.Spacing.md)
     }
@@ -203,7 +210,3 @@ struct MainView: View {
     }
 }
 
-#Preview {
-    MainView()
-        .environmentObject(AppState())
-}

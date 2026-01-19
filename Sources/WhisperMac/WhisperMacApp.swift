@@ -59,7 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var flashCount = 0
         flashTimer?.invalidate()
 
-        flashTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] timer in
+        flashTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { timer in
             flashCount += 1
 
             if flashCount % 2 == 0 {
@@ -87,7 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc func showMainWindow() {
+    @MainActor @objc func showMainWindow() {
         if mainWindow == nil {
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 800, height: 600),

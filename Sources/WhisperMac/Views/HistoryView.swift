@@ -299,7 +299,3 @@ struct HistoryItemView: View {
     }
 }
 
-#Preview {
-    HistoryView()
-        .environmentObject(AppState())
-}

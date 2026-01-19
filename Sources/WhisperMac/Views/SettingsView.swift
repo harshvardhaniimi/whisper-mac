@@ -259,7 +259,3 @@ struct ModelRow: View {
     }
 }
 
-#Preview {
-    SettingsView()
-        .environmentObject(AppState())
-}

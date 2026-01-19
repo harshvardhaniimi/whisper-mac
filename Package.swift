@@ -16,53 +16,14 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "WhisperMac",
-            dependencies: ["WhisperCpp"],
-            path: "Sources/WhisperMac"
-        ),
-        .target(
-            name: "WhisperCpp",
             dependencies: [],
-            path: "Sources/WhisperCpp",
-            sources: ["src"],
-            publicHeadersPath: "include",
-            cSettings: [
-                .headerSearchPath("include"),
-                .headerSearchPath("include/ggml-cpu"),
-                .headerSearchPath("src"),
-                .define("GGML_USE_ACCELERATE"),
-                .define("GGML_USE_METAL"),
-                .define("ACCELERATE_NEW_LAPACK"),
-                .define("ACCELERATE_LAPACK_ILP64"),
-                .unsafeFlags([
-                    "-fno-objc-arc",
-                    "-Wno-shorten-64-to-32",
-                    "-Wno-implicit-int-conversion",
-                    "-Wno-unused-function",
-                    "-Wno-unused-variable",
-                    "-Wno-deprecated-declarations"
-                ]),
-            ],
-            cxxSettings: [
-                .headerSearchPath("include"),
-                .headerSearchPath("include/ggml-cpu"),
-                .headerSearchPath("src"),
-                .define("GGML_USE_ACCELERATE"),
-                .define("GGML_USE_METAL"),
-                .unsafeFlags([
-                    "-Wno-shorten-64-to-32",
-                    "-Wno-implicit-int-conversion",
-                    "-Wno-unused-function",
-                    "-Wno-unused-variable",
-                    "-Wno-deprecated-declarations"
-                ]),
-            ],
+            path: "Sources/WhisperMac",
             linkerSettings: [
-                .linkedFramework("Accelerate"),
-                .linkedFramework("Metal"),
-                .linkedFramework("MetalKit"),
-                .linkedFramework("Foundation")
+                .linkedFramework("AVFoundation"),
+                .linkedFramework("Speech"),
+                .linkedFramework("AppKit"),
+                .linkedFramework("Carbon")
             ]
         )
-    ],
-    cxxLanguageStandard: .cxx17
+    ]
 )

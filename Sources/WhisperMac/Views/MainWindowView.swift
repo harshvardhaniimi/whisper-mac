@@ -269,7 +269,3 @@ struct MainWindowView: View {
     }
 }
 
-#Preview {
-    MainWindowView()
-        .environmentObject(AppState())
-}

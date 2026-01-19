@@ -71,19 +71,3 @@ struct WaveformView: View {
     }
 }
 
-#Preview {
-    VStack {
-        WaveformView(audioLevel: 0.3)
-            .frame(height: 60)
-            .padding()
-
-        WaveformView(audioLevel: 0.7)
-            .frame(height: 60)
-            .padding()
-
-        WaveformView(audioLevel: 0.9)
-            .frame(height: 60)
-            .padding()
-    }
-    .background(Color(NSColor.windowBackgroundColor))
-}

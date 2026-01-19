@@ -5,16 +5,35 @@ import AppKit
 class NotificationService: ObservableObject {
     static let shared = NotificationService()
 
+    private var notificationsAuthorized: Bool = false
+
     private init() {
-        requestPermission()
+        // Check if we have a proper bundle (required for UNUserNotificationCenter)
+        if Bundle.main.bundleIdentifier != nil {
+            checkAndRequestPermission()
+        }
     }
 
-    func requestPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if let error = error {
-                print("Notification permission error: \(error)")
+    private func checkAndRequestPermission() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                switch settings.authorizationStatus {
+                case .authorized, .provisional:
+                    self.notificationsAuthorized = true
+                case .notDetermined:
+                    self.requestPermission()
+                default:
+                    self.notificationsAuthorized = false
+                }
             }
-            print("Notification permission granted: \(granted)")
+        }
+    }
+
+    private func requestPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            DispatchQueue.main.async {
+                self.notificationsAuthorized = granted
+            }
         }
     }
 
@@ -22,87 +41,71 @@ class NotificationService: ObservableObject {
         // Play system sound
         NSSound.beep()
 
-        // Show notification
-        let content = UNMutableNotificationContent()
-        content.title = "Recording Started"
-        content.body = "Speak now... Press Ctrl+Ctrl again to stop"
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: "recording-started",
-            content: content,
-            trigger: nil
-        )
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Notification error: \(error)")
-            }
-        }
-
         // Visual feedback - flash menu bar icon
         flashMenuBarIcon()
+
+        // Notification (silent fail if not authorized)
+        guard notificationsAuthorized else { return }
+        sendNotification(
+            identifier: "recording-started",
+            title: "Recording Started",
+            body: "Speak now... Press Ctrl+Ctrl again to stop"
+        )
     }
 
     func showRecordingStopped() {
-        // Play different sound
+        // Play sound
         NSSound(named: "Pop")?.play()
 
-        // Show notification
-        let content = UNMutableNotificationContent()
-        content.title = "Recording Stopped"
-        content.body = "Transcribing..."
-        content.sound = .default
-
-        let request = UNNotificationRequest(
+        guard notificationsAuthorized else { return }
+        sendNotification(
             identifier: "recording-stopped",
-            content: content,
-            trigger: nil
+            title: "Recording Stopped",
+            body: "Transcribing..."
         )
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Notification error: \(error)")
-            }
-        }
     }
 
     func showTranscriptionComplete(text: String) {
-        let content = UNMutableNotificationContent()
-        content.title = "Transcription Complete"
-        content.body = String(text.prefix(100)) + (text.count > 100 ? "..." : "")
-        content.sound = UNNotificationSound(named: UNNotificationSoundName("Glass"))
+        // Play completion sound
+        NSSound(named: "Glass")?.play()
 
-        let request = UNNotificationRequest(
+        guard notificationsAuthorized else { return }
+        sendNotification(
             identifier: "transcription-complete",
-            content: content,
-            trigger: nil
+            title: "Transcription Complete",
+            body: String(text.prefix(100)) + (text.count > 100 ? "..." : "")
         )
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Notification error: \(error)")
-            }
-        }
     }
 
     func showError(_ message: String) {
+        // Play error sound
+        NSSound.beep()
+        print("⚠️ \(message)")
+
+        guard notificationsAuthorized else { return }
+        sendNotification(
+            identifier: "error-\(UUID().uuidString)",
+            title: "Whisper Error",
+            body: message
+        )
+    }
+
+    private func sendNotification(identifier: String, title: String, body: String) {
         let content = UNMutableNotificationContent()
-        content.title = "Whisper Error"
-        content.body = message
-        content.sound = .defaultCritical
+        content.title = title
+        content.body = body
+        content.sound = .default
 
         let request = UNNotificationRequest(
-            identifier: "error-\(UUID().uuidString)",
+            identifier: identifier,
             content: content,
             trigger: nil
         )
 
-        UNUserNotificationCenter.current().add(request)
+        UNUserNotificationCenter.current().add(request) { _ in }
     }
 
     private func flashMenuBarIcon() {
-        // This will be called from AppDelegate to flash the menu bar icon
         NotificationCenter.default.post(name: NSNotification.Name("FlashMenuBarIcon"), object: nil)
     }
 }

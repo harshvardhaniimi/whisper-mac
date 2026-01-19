@@ -7,8 +7,9 @@ class GlobalHotkeyManager: ObservableObject {
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
-    private var lastControlPressTime: Date?
-    private let doublePressInterval: TimeInterval = 0.5 // 500ms window for double press
+    private var lastControlReleaseTime: Date?
+    private var controlWasPressed = false
+    private let doublePressInterval: TimeInterval = 0.4 // 400ms window for double press
 
     var onHotkeyTriggered: (() -> Void)?
 
@@ -31,15 +32,24 @@ class GlobalHotkeyManager: ObservableObject {
                 guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
                 let manager = Unmanaged<GlobalHotkeyManager>.fromOpaque(refcon).takeUnretainedValue()
 
-                Task { @MainActor in
-                    manager.handleEvent(event)
+                // Handle synchronously to avoid timing issues
+                let flags = event.flags
+                let controlPressed = flags.contains(.maskControl)
+                let noOtherModifiers = !flags.contains(.maskShift) &&
+                                       !flags.contains(.maskAlternate) &&
+                                       !flags.contains(.maskCommand)
+
+                if noOtherModifiers {
+                    Task { @MainActor in
+                        manager.handleControlKey(isPressed: controlPressed)
+                    }
                 }
 
                 return Unmanaged.passUnretained(event)
             },
             userInfo: Unmanaged.passUnretained(self).toOpaque()
         ) else {
-            print("Failed to create event tap")
+            print("❌ Failed to create event tap - check Accessibility permissions")
             return
         }
 
@@ -52,7 +62,7 @@ class GlobalHotkeyManager: ObservableObject {
         // Enable the tap
         CGEvent.tapEnable(tap: eventTap, enable: true)
 
-        print("Global hotkey monitoring started (Ctrl+Ctrl to record)")
+        print("✅ Global hotkey monitoring started (Ctrl+Ctrl to record)")
     }
 
     func stopMonitoring() {
@@ -70,34 +80,27 @@ class GlobalHotkeyManager: ObservableObject {
         print("Global hotkey monitoring stopped")
     }
 
-    private func handleEvent(_ event: CGEvent) {
-        let flags = event.flags
-
-        // Check if Control key is pressed (and no other modifiers)
-        let controlPressed = flags.contains(.maskControl)
-        let noOtherModifiers = !flags.contains(.maskShift) &&
-                               !flags.contains(.maskAlternate) &&
-                               !flags.contains(.maskCommand)
-
-        if controlPressed && noOtherModifiers {
+    private func handleControlKey(isPressed: Bool) {
+        if isPressed && !controlWasPressed {
+            // Control key just pressed down
+            controlWasPressed = true
+        } else if !isPressed && controlWasPressed {
+            // Control key just released
+            controlWasPressed = false
             let now = Date()
 
-            if let lastPress = lastControlPressTime {
-                let interval = now.timeIntervalSince(lastPress)
+            if let lastRelease = lastControlReleaseTime {
+                let interval = now.timeIntervalSince(lastRelease)
 
                 if interval <= doublePressInterval {
                     // Double press detected!
-                    print("Hotkey triggered: Ctrl+Ctrl")
+                    lastControlReleaseTime = nil
                     onHotkeyTriggered?()
-                    lastControlPressTime = nil // Reset
-                } else {
-                    // Too slow, start new sequence
-                    lastControlPressTime = now
+                    return
                 }
-            } else {
-                // First press
-                lastControlPressTime = now
             }
+
+            lastControlReleaseTime = now
         }
     }
 
@@ -106,7 +109,9 @@ class GlobalHotkeyManager: ObservableObject {
         let accessEnabled = AXIsProcessTrustedWithOptions(options)
 
         if !accessEnabled {
-            print("Accessibility access not granted. Please enable in System Settings.")
+            print("⚠️  Accessibility access not granted. Please enable in System Settings.")
+        } else {
+            print("✅ Accessibility access granted")
         }
     }
 
@@ -115,6 +120,13 @@ class GlobalHotkeyManager: ObservableObject {
     }
 
     deinit {
-        stopMonitoring()
+        // Clean up event tap directly since we can't call async methods from deinit
+        if let eventTap = eventTap {
+            CGEvent.tapEnable(tap: eventTap, enable: false)
+        }
+
+        if let runLoopSource = runLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+        }
     }
 }
