@@ -1,5 +1,7 @@
 import SwiftUI
 import Combine
+import UserNotifications
+import Speech
 
 @MainActor
 class AppState: ObservableObject {
@@ -72,10 +74,10 @@ class AppState: ObservableObject {
     func initialize() async {
         guard !isInitialSetupComplete else { return }
 
-        // Check if any models are installed
-        if modelManager.installedModels.isEmpty {
-            print("No models found. Auto-downloading base model...")
-            await autoDownloadBaseModel()
+        // Request speech recognition authorization
+        let authorized = await whisperService.requestAuthorization()
+        if !authorized {
+            print("Speech recognition not authorized")
         }
 
         // Start hotkey monitoring
@@ -83,40 +85,19 @@ class AppState: ObservableObject {
             hotkeyManager.startMonitoring()
         }
 
-        isInitialSetupComplete = true
-    }
-
-    private func autoDownloadBaseModel() async {
-        isDownloadingModel = true
-
-        do {
-            print("Downloading base model (142 MB)...")
-
-            // Show initial notification
+        // Show ready notification (only if we have a bundle)
+        if Bundle.main.bundleIdentifier != nil {
             let content = UNMutableNotificationContent()
-            content.title = "Whisper Mac"
-            content.body = "Downloading Whisper model... This may take a moment."
-            let request = UNNotificationRequest(identifier: "download-start", content: content, trigger: nil)
+            content.title = "Speech to Text Ready!"
+            content.body = "Press Ctrl twice to start recording"
+            content.sound = .default
+            let request = UNNotificationRequest(identifier: "ready", content: content, trigger: nil)
             try? await UNUserNotificationCenter.current().add(request)
-
-            try await modelManager.downloadModel(.base)
-
-            print("Base model downloaded successfully")
-
-            // Show success notification
-            let successContent = UNMutableNotificationContent()
-            successContent.title = "Whisper Ready!"
-            successContent.body = "Press Ctrl twice to start recording"
-            successContent.sound = .default
-            let successRequest = UNNotificationRequest(identifier: "download-complete", content: successContent, trigger: nil)
-            try? await UNUserNotificationCenter.current().add(successRequest)
-
-        } catch {
-            print("Failed to download base model: \(error)")
-            notificationService.showError("Failed to download model. Please check Settings.")
+        } else {
+            print("Speech to Text Ready! Press Ctrl twice to start recording")
         }
 
-        isDownloadingModel = false
+        isInitialSetupComplete = true
     }
 
     private func handleHotkeyPress() async {
@@ -140,6 +121,9 @@ class AppState: ObservableObject {
             try await audioService.startRecording()
             isRecording = true
 
+            // Show visual indicator at cursor
+            RecordingIndicatorWindow.shared.show()
+
             // Show feedback
             notificationService.showRecordingStarted()
         } catch {
@@ -149,6 +133,9 @@ class AppState: ObservableObject {
     }
 
     func stopRecording() async {
+        // Hide recording indicator
+        RecordingIndicatorWindow.shared.hide()
+
         guard let audioData = await audioService.stopRecording() else {
             isRecording = false
             return
@@ -185,6 +172,9 @@ class AppState: ObservableObject {
     }
 
     func stopRecordingAndTranscribe() async {
+        // Hide recording indicator
+        RecordingIndicatorWindow.shared.hide()
+
         guard let audioData = await audioService.stopRecording() else {
             isRecording = false
             return
@@ -195,11 +185,6 @@ class AppState: ObservableObject {
         isProcessing = true
 
         do {
-            // Check if model is installed
-            if !modelManager.isModelInstalled(selectedModel) {
-                throw TranscriptionError.modelNotFound
-            }
-
             let result = try await whisperService.transcribe(
                 audioData: audioData,
                 model: selectedModel,
