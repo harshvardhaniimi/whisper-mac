@@ -21,6 +21,13 @@ curl -sL "$DOWNLOAD_URL" -o "$TMP_DIR/WhisperMac.zip"
 echo "Extracting..."
 unzip -q "$TMP_DIR/WhisperMac.zip" -d "$TMP_DIR"
 
+# Check if we can write to /Applications, otherwise use ~/Applications
+if [ ! -w "$INSTALL_DIR" ]; then
+    INSTALL_DIR="$HOME/Applications"
+    mkdir -p "$INSTALL_DIR"
+    echo "Using $INSTALL_DIR (no admin privileges)"
+fi
+
 # Remove old version if exists
 if [ -d "$INSTALL_DIR/$APP_NAME.app" ]; then
     echo "Removing previous version..."
@@ -41,7 +48,7 @@ rm -rf "$TMP_DIR"
 echo ""
 echo "Installed successfully!"
 echo ""
-echo "To launch: open /Applications/$APP_NAME.app"
+echo "To launch: open $INSTALL_DIR/$APP_NAME.app"
 echo ""
 echo "First launch setup:"
 echo "  1. Right-click the app and select 'Open' (first time only)"
