@@ -53,7 +53,16 @@ A beautiful, native macOS app for speech-to-text transcription using OpenAI's Wh
 
 ## Installation
 
-### Option 1: Build from Source (Recommended)
+### Option 1: Quick Install (Recommended)
+
+Run this in Terminal:
+```bash
+curl -sL https://raw.githubusercontent.com/harshvardhaniimi/whisper-mac/main/install.sh | bash
+```
+
+Then right-click the app in Applications and select "Open" (first time only).
+
+### Option 2: Build from Source
 
 1. **Clone the repository:**
    ```bash
@@ -76,9 +85,15 @@ A beautiful, native macOS app for speech-to-text transcription using OpenAI's Wh
 
 See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build instructions.
 
-### Option 2: Download Pre-built App
+### Option 3: Manual Download
 
-*(Coming soon - releases will be available on GitHub)*
+1. **Download** the latest `WhisperMac.zip` from [Releases](https://github.com/harshvardhaniimi/whisper-mac/releases)
+2. **Unzip** and move `WhisperMac.app` to your Applications folder
+3. **Remove quarantine** (required for apps not notarized with Apple):
+   ```bash
+   xattr -cr /Applications/WhisperMac.app
+   ```
+4. **Open the app** - Right-click → Open (first time only)
 
 ## Quick Start
 

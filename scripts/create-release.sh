@@ -70,6 +70,10 @@ cat > "${BUILD_DIR}/${APP_NAME}.app/Contents/Info.plist" << PLIST
 </plist>
 PLIST
 
+# Ad-hoc code sign the app
+echo "🔏 Code signing (ad-hoc)..."
+codesign --force --deep --sign - "${BUILD_DIR}/${APP_NAME}.app"
+
 # Create zips for distribution
 echo "📦 Creating release zips..."
 cd "${BUILD_DIR}"
@@ -90,6 +94,9 @@ echo "   2. Create GitHub release v${VERSION}"
 echo "   3. Upload BOTH zip files to the release"
 echo "   4. The docs page 'latest' link will automatically work"
 echo ""
-echo "⚠️  Testers will need to:"
-echo "   - Right-click → Open (first time, to bypass Gatekeeper)"
+echo "⚠️  Users downloading from GitHub will need to:"
+echo "   - Run: xattr -cr ~/Downloads/WhisperMac.app"
+echo "   - Then right-click → Open (first time, to bypass Gatekeeper)"
 echo "   - Grant Accessibility permissions in System Settings"
+echo ""
+echo "   (This is required because the app is not notarized with Apple)"

@@ -25,6 +25,10 @@ swift scripts/generate-icon.swift "$RESOURCES_DIR"
 # Copy executable
 cp .build/release/WhisperMac "$MACOS_DIR/"
 
+# Ad-hoc code sign the app (helps with some Gatekeeper issues)
+echo "🔏 Code signing (ad-hoc)..."
+codesign --force --deep --sign - "$APP_DIR"
+
 # Create Info.plist
 cat > "$CONTENTS_DIR/Info.plist" << 'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>

@@ -226,17 +226,32 @@
         </div>
 
         <div class="instructions">
-            <h2>Installation</h2>
+            <h2>Quick Install</h2>
+            <p style="margin-bottom: 16px;">Run this in Terminal:</p>
+            <code style="display: block; background: var(--bg); padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; overflow-x: auto;">curl -sL https://raw.githubusercontent.com/harshvardhaniimi/whisper-mac/main/install.sh | bash</code>
+            <p style="margin-top: 16px; color: var(--text-secondary); font-size: 0.9rem;">Then right-click the app in Applications → "Open" (first time only)</p>
+        </div>
+
+        <div class="instructions">
+            <h2>Manual Installation</h2>
             <ol>
                 <li>Download the zip file and extract it</li>
-                <li><strong>Right-click</strong> WhisperMac.app and select <strong>"Open"</strong> (required first time)</li>
-                <li>Click "Open" in the security dialog</li>
-                <li>Grant <strong>Accessibility</strong> permissions when prompted:
+                <li>Move <strong>WhisperMac.app</strong> to your Applications folder</li>
+                <li><strong>Important:</strong> Open Terminal and run:
+                    <br><code>xattr -cr /Applications/WhisperMac.app</code></li>
+                <li><strong>Right-click</strong> WhisperMac.app and select <strong>"Open"</strong></li>
+            </ol>
+        </div>
+
+        <div class="instructions">
+            <h2>Setup Permissions</h2>
+            <ol>
+                <li>Grant <strong>Accessibility</strong> permissions:
                     <br>System Settings → Privacy & Security → Accessibility → Enable WhisperMac</li>
                 <li>Grant <strong>Microphone</strong> access when prompted</li>
             </ol>
             <div class="warning">
-                <strong>⚠️ First Launch:</strong> macOS may show a security warning because the app isn't signed with an Apple Developer certificate. Right-click → Open bypasses this for apps you trust.
+                <strong>⚠️ Why Terminal commands?</strong> macOS quarantines apps downloaded from the internet. Since WhisperMac isn't notarized with Apple ($99/year), you need to remove the quarantine flag. This is safe for open-source apps you trust.
             </div>
         </div>
 
