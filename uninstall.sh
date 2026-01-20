@@ -15,7 +15,7 @@ echo "  • Transcription history"
 echo "  • App preferences"
 echo ""
 
-read -p "Are you sure you want to uninstall WhisperMac? (y/N) " -n 1 -r
+read -p "Are you sure you want to uninstall WhisperMac? (y/N) " -n 1 -r < /dev/tty
 echo ""
 
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
