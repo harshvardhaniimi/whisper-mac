@@ -26,7 +26,7 @@ A beautiful, native macOS app for speech-to-text transcription using OpenAI's Wh
 
 ⚡ **Apple Silicon Optimized** - Leverages Metal and Accelerate frameworks for blazing-fast performance on M1/M2/M3 Macs.
 
-⌨️ **Global Hotkey** - Press Ctrl twice to start/stop recording from anywhere. Text is automatically inserted at your cursor and copied to clipboard.
+⌨️ **Global Hotkey** - Press Cmd+Shift+Space to start/stop recording from anywhere. Text is automatically inserted at your cursor and copied to clipboard.
 
 🚀 **Auto-Setup** - First launch automatically downloads the base model. No manual setup required - just install and use!
 
@@ -102,7 +102,7 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build instructio
 1. **Launch the app** - A waveform icon will appear in your menu bar
 2. **Wait for auto-download** - The base model (142 MB) downloads automatically on first launch
 3. **Grant permissions** - Allow Microphone and Accessibility access when prompted
-4. **You're ready!** - Press Ctrl twice from anywhere to start recording
+4. **You're ready!** - Press Cmd+Shift+Space from anywhere to start recording
 
 ### Using the Global Hotkey (Recommended)
 
@@ -110,10 +110,10 @@ The fastest way to transcribe:
 
 1. **Start recording** - Press Ctrl key twice quickly (anywhere in macOS)
 2. **Speak** - Say what you want to transcribe
-3. **Stop & transcribe** - Press Ctrl twice again
+3. **Stop & transcribe** - Press Cmd+Shift+Space again
 4. **Done!** - Text appears at your cursor and is copied to clipboard
 
-**Example:** Writing an email? Click in the email body, press Ctrl+Ctrl, speak your message, press Ctrl+Ctrl again. The transcribed text appears in your email!
+**Example:** Writing an email? Click in the email body, press Cmd+Shift+Space, speak your message, press Cmd+Shift+Space again. The transcribed text appears in your email!
 
 ### Using the Menu Bar App
 
@@ -194,23 +194,21 @@ Models are downloaded once from Hugging Face and stored locally:
 
 ## Keyboard Shortcuts
 
-- **Ctrl+Ctrl** (anywhere in macOS) - Start/stop recording with auto-insert at cursor
+- **Cmd+Shift+Space** (anywhere in macOS) - Start/stop recording with auto-insert at cursor
 - `⌘+C` - Copy transcription
 - `⌘+,` - Settings (coming soon)
 - `⌘+H` - Show history (coming soon)
 
-### Global Hotkey Setup
+### Global Hotkey
 
-The global hotkey (Ctrl+Ctrl) requires **Accessibility permissions**:
+The global hotkey (Cmd+Shift+Space) works out of the box - **no Accessibility permissions required** for the hotkey itself!
 
-1. Open **System Settings** → **Privacy & Security** → **Accessibility**
-2. Enable **WhisperMac**
-3. You may need to restart the app
-
-Once enabled, you can:
+You can:
 - Record from any application
 - Have text automatically inserted at your cursor
 - Text is also copied to clipboard as backup
+
+**Note:** Text insertion at cursor still requires Accessibility permissions.
 
 ## Roadmap
 
@@ -220,7 +218,7 @@ Once enabled, you can:
 - [x] Model management with auto-download
 - [x] History with search
 - [x] Export functionality
-- [x] Global hotkey (Ctrl+Ctrl) for quick recording
+- [x] Global hotkey (Cmd+Shift+Space) for quick recording
 - [x] Text insertion at cursor position
 - [x] Audio/visual feedback notifications
 - [ ] Streaming transcription (real-time results)
@@ -229,7 +227,7 @@ Once enabled, you can:
 - [ ] Timestamp display
 - [ ] Additional keyboard shortcuts
 - [ ] Dark/light mode customization
-- [ ] Configurable hotkey (currently Ctrl+Ctrl)
+- [ ] Configurable hotkey (currently Cmd+Shift+Space - no permissions required)
 - [ ] App Store distribution
 
 ## Contributing
@@ -244,11 +242,10 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for development setup.
 - Check that `LSUIElement` is set in Info.plist
 - Restart the app
 
-**Global hotkey (Ctrl+Ctrl) not working:**
-- Enable Accessibility permissions: System Settings → Privacy & Security → Accessibility → Enable WhisperMac
+**Global hotkey (Cmd+Shift+Space) not working:**
 - Make sure the hotkey is enabled in Settings
-- Restart the app after granting permissions
-- Check if another app is using the same hotkey
+- Check if another app is using the same hotkey (e.g., Spotlight, another app)
+- Restart the app
 
 **Text not inserting at cursor:**
 - Enable Accessibility permissions (see above)
@@ -280,10 +277,39 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for development setup.
 - Try again (downloads can be large)
 - Manually download from Hugging Face if needed
 
+## Uninstall
+
+To completely remove WhisperMac and all its data:
+
+```bash
+curl -sL https://raw.githubusercontent.com/harshvardhaniimi/whisper-mac/main/uninstall.sh | bash
+```
+
+Or manually:
+1. Quit WhisperMac
+2. Delete `/Applications/WhisperMac.app`
+3. Delete `~/Library/Application Support/WhisperMac/` (contains models and history)
+
+## Contributing & Feedback
+
+**We welcome your feedback!** This project is actively maintained and we'd love to hear from you:
+
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/harshvardhaniimi/whisper-mac/issues) with detailed steps to reproduce
+- 💡 **Feature Requests**: Describe the feature and why it would be useful
+- 🔧 **Pull Requests**: Contributions are welcome! Please open an issue first to discuss major changes
+- 💬 **General Feedback**: Share your experience using WhisperMac
+
+### A Note on Development
+
+This application was **entirely vibe coded** using [Claude Code](https://claude.ai/code) - Anthropic's AI coding assistant. The entire codebase, from architecture to implementation, was developed through conversational AI pair programming. We believe this represents an exciting new paradigm in software development.
+
+If you encounter any quirks or have suggestions for improvement, please don't hesitate to reach out!
+
 ## Credits
 
 - **OpenAI Whisper** - The incredible speech recognition model: https://github.com/openai/whisper
 - **whisper.cpp** - Efficient C++ implementation: https://github.com/ggerganov/whisper.cpp
+- **Apple Speech Framework** - On-device speech recognition
 - **Design inspiration** - Apple HIG, Claude.ai, classic Mac apps
 
 ## License
@@ -301,8 +327,12 @@ This project uses OpenAI's Whisper model, which is also licensed under MIT.
 
 ## Author
 
-Built with ❤️ for the Mac community.
+Created with [Claude Code](https://claude.ai/code) by **Dr. Harshvardhan**
+
+- 🌐 Website: [harshvardhan.dev](https://harshvardhan.dev)
+- 🐦 Twitter: [@harshvardhan_](https://twitter.com/harshvardhan_)
+- 📧 Email: hello@harshvardhan.dev
 
 ---
 
-**Note**: This app is not affiliated with OpenAI. Whisper is an open-source model created by OpenAI.
+**Note**: This app is not affiliated with OpenAI or Anthropic. Whisper is an open-source model created by OpenAI.

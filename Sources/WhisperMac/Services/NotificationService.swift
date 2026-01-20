@@ -49,7 +49,7 @@ class NotificationService: ObservableObject {
         sendNotification(
             identifier: "recording-started",
             title: "Recording Started",
-            body: "Speak now... Press Ctrl+Ctrl again to stop"
+            body: "Speak now... Press Cmd+Shift+Space again to stop"
         )
     }
 

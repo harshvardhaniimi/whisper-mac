@@ -42,7 +42,7 @@ In Xcode: `open Package.swift`, then ⌘+B to build, ⌘+R to run.
 ### Services (Sources/WhisperMac/Services/)
 - `AudioCaptureService` - Records via AVAudioEngine, resamples to 16kHz WAV, calculates audio levels
 - `WhisperService` - Wraps SFSpeechRecognizer for transcription
-- `GlobalHotkeyManager` - Detects Ctrl+Ctrl double-press via CGEvent tap (requires Accessibility permissions)
+- `GlobalHotkeyManager` - Registers Cmd+Shift+Space global hotkey via Carbon RegisterEventHotKey API (no Accessibility permissions needed for hotkey)
 - `TextInsertionService` - Inserts transcribed text at cursor via clipboard + simulated Cmd+V paste
 - `ModelManager` - Model management (currently no-op since using Apple Speech)
 - `HistoryManager` - Persists transcription history
@@ -61,16 +61,16 @@ In Xcode: `open Package.swift`, then ⌘+B to build, ⌘+R to run.
 - `WhisperModel` - Enum of model sizes (tiny/base/small/medium/large)
 
 ### Key Flows
-1. **Hotkey Recording**: GlobalHotkeyManager detects Ctrl+Ctrl → AppState.handleHotkeyPress → RecordingIndicatorWindow.show() → AudioCaptureService records → WhisperService transcribes → TextInsertionService pastes at cursor
+1. **Hotkey Recording**: GlobalHotkeyManager receives Cmd+Shift+Space → AppState.handleHotkeyPress → RecordingIndicatorWindow.show() → AudioCaptureService records → WhisperService transcribes → TextInsertionService pastes at cursor
 2. **UI Recording**: MainView record button → AppState.startRecording/stopRecording → same transcription flow
 3. **File Transcription**: Drop file in MainWindowView → AppState.transcribeFile → WhisperService.transcribeFile
 
 ## Required Permissions
 - **Microphone**: Recording audio
-- **Accessibility**: Global hotkey (Ctrl+Ctrl) and text insertion at cursor
+- **Accessibility**: Text insertion at cursor (optional - the hotkey itself does NOT require this)
 - **Speech Recognition**: SFSpeechRecognizer authorization
 
-Grant Accessibility permissions in: System Settings → Privacy & Security → Accessibility → Enable WhisperMac
+Grant Accessibility permissions in: System Settings → Privacy & Security → Accessibility → Enable WhisperMac (only needed for auto-inserting text at cursor)
 
 ## Data Storage
 - Models: `~/Library/Application Support/WhisperMac/models/`
@@ -80,6 +80,6 @@ Grant Accessibility permissions in: System Settings → Privacy & Security → A
 - SwiftUI for UI
 - AVFoundation for audio capture
 - Speech framework for transcription
-- Carbon for global hotkey event tap
+- Carbon for global hotkey registration (RegisterEventHotKey)
 - ApplicationServices for text insertion via Accessibility API
 - UserNotifications for system notifications (when available)

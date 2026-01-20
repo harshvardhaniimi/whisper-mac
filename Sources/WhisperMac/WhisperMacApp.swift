@@ -4,7 +4,6 @@ import AppKit
 @main
 struct WhisperMacApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var appState = AppState()
 
     var body: some Scene {
         // Hidden main window (we use menu bar instead)

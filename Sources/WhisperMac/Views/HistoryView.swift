@@ -5,8 +5,6 @@ struct HistoryView: View {
     @EnvironmentObject var appState: AppState
     @State private var searchText = ""
     @State private var selectedTranscription: Transcription?
-    @State private var showExportDialog = false
-    @State private var exportFormat: ExportFormat = .text
 
     private var filteredTranscriptions: [Transcription] {
         if searchText.isEmpty {
@@ -26,21 +24,12 @@ struct HistoryView: View {
             // Content
             if appState.transcriptionHistory.isEmpty {
                 emptyState
+            } else if let transcription = selectedTranscription {
+                detail(for: transcription)
             } else {
-                HSplitView {
-                    // List
-                    list
-
-                    // Detail
-                    if let transcription = selectedTranscription {
-                        detail(for: transcription)
-                    } else {
-                        emptyDetail
-                    }
-                }
+                list
             }
         }
-        .frame(width: 700, height: 600)
     }
 
     // MARK: - Header
@@ -48,14 +37,25 @@ struct HistoryView: View {
     private var header: some View {
         VStack(spacing: DesignSystem.Spacing.sm) {
             HStack {
-                Text("History")
-                    .font(DesignSystem.Typography.title2)
-                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                if selectedTranscription != nil {
+                    Button(action: { selectedTranscription = nil }) {
+                        HStack(spacing: DesignSystem.Spacing.xs) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(DesignSystem.Colors.accent)
+                } else {
+                    Text("History")
+                        .font(DesignSystem.Typography.title2)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+                }
 
                 Spacer()
 
                 // Clear all button
-                if !appState.transcriptionHistory.isEmpty {
+                if !appState.transcriptionHistory.isEmpty && selectedTranscription == nil {
                     Button("Clear All") {
                         appState.historyManager.deleteAll()
                         appState.transcriptionHistory.removeAll()
@@ -65,25 +65,27 @@ struct HistoryView: View {
                 }
             }
 
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
+            // Search bar (only show in list view)
+            if selectedTranscription == nil {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
 
-                TextField("Search transcriptions...", text: $searchText)
-                    .textFieldStyle(.plain)
+                    TextField("Search transcriptions...", text: $searchText)
+                        .textFieldStyle(.plain)
 
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(DesignSystem.Spacing.sm)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(DesignSystem.CornerRadius.sm)
             }
-            .padding(DesignSystem.Spacing.sm)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(DesignSystem.CornerRadius.sm)
         }
         .padding(DesignSystem.Spacing.md)
     }
@@ -96,7 +98,7 @@ struct HistoryView: View {
                 ForEach(filteredTranscriptions) { transcription in
                     HistoryItemView(
                         transcription: transcription,
-                        isSelected: selectedTranscription?.id == transcription.id
+                        isSelected: false
                     )
                     .onTapGesture {
                         selectedTranscription = transcription
@@ -118,23 +120,9 @@ struct HistoryView: View {
             }
             .padding(DesignSystem.Spacing.sm)
         }
-        .frame(minWidth: 250, idealWidth: 300)
     }
 
     // MARK: - Detail
-
-    private var emptyDetail: some View {
-        VStack(spacing: DesignSystem.Spacing.md) {
-            Image(systemName: "text.bubble")
-                .font(.system(size: 48))
-                .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.3))
-
-            Text("Select a transcription")
-                .font(DesignSystem.Typography.headline)
-                .foregroundColor(DesignSystem.Colors.textSecondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
 
     private func detail(for transcription: Transcription) -> some View {
         VStack(spacing: 0) {
@@ -202,7 +190,6 @@ struct HistoryView: View {
                     .textSelection(.enabled)
             }
         }
-        .frame(minWidth: 350)
     }
 
     // MARK: - Empty State
@@ -293,9 +280,8 @@ struct HistoryItemView: View {
         .background(
             isSelected ?
                 DesignSystem.Colors.accent.opacity(0.2) :
-                Color.clear
+                Color.gray.opacity(0.05)
         )
         .cornerRadius(DesignSystem.CornerRadius.sm)
     }
 }
-

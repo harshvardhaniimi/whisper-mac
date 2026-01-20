@@ -306,11 +306,11 @@
         <div class="how-it-works">
             <h2 class="section-title">How It Works</h2>
             <div class="steps">
-                <div class="step">Press <strong>Ctrl</strong> twice</div>
+                <div class="step">Press <strong>Cmd+Shift+Space</strong></div>
                 <span class="step-arrow">→</span>
                 <div class="step">Speak</div>
                 <span class="step-arrow">→</span>
-                <div class="step">Press <strong>Ctrl</strong> twice</div>
+                <div class="step">Press <strong>Cmd+Shift+Space</strong></div>
                 <span class="step-arrow">→</span>
                 <div class="step">Text appears at cursor</div>
             </div>
@@ -326,7 +326,7 @@
             <div class="feature">
                 <div class="feature-icon">⌨️</div>
                 <h3>Global Hotkey</h3>
-                <p>Press Ctrl twice from anywhere. Works in any app.</p>
+                <p>Press Cmd+Shift+Space from anywhere. No special permissions needed.</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">🎯</div>
@@ -373,15 +373,33 @@
         <div class="permissions">
             <h2>Permissions Needed</h2>
             <ul>
-                <li><strong>Accessibility</strong> — For global hotkey and text insertion<br>
-                    <span style="color: var(--text-secondary); font-size: 0.85rem;">System Settings → Privacy &amp; Security → Accessibility</span></li>
                 <li><strong>Microphone</strong> — For recording audio<br>
                     <span style="color: var(--text-secondary); font-size: 0.85rem;">Prompted on first recording</span></li>
+                <li><strong>Accessibility</strong> (optional) — For auto-inserting text at cursor<br>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">System Settings → Privacy &amp; Security → Accessibility</span></li>
             </ul>
+            <div class="info-box">
+                <strong>Good news!</strong> The global hotkey (Cmd+Shift+Space) works without any special permissions. Accessibility is only needed if you want text auto-inserted at your cursor.
+            </div>
+        </div>
+
+        <div class="install-section" style="text-align: center;">
+            <h2>Uninstall</h2>
+            <p>To completely remove WhisperMac:</p>
+            <code class="code-block">curl -sL https://raw.githubusercontent.com/harshvardhaniimi/whisper-mac/main/uninstall.sh | bash</code>
+        </div>
+
+        <div class="permissions" style="text-align: center;">
+            <h2>Feedback Welcome!</h2>
+            <p>This app was <strong>entirely vibe coded</strong> with <a href="https://claude.ai/code">Claude Code</a>.</p>
+            <p style="margin-top: 12px;">Found a bug? Have a feature idea? <a href="https://github.com/harshvardhaniimi/whisper-mac/issues">Open an issue</a> or submit a PR!</p>
         </div>
 
         <footer>
             <p>
+                Created with <a href="https://claude.ai/code">Claude Code</a> by <strong>Dr. Harshvardhan</strong>
+            </p>
+            <p style="margin-top: 8px;">
                 Open source on <a href="https://github.com/harshvardhaniimi/whisper-mac">GitHub</a> &bull; MIT License
             </p>
         </footer>

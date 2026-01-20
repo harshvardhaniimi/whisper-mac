@@ -1,132 +1,129 @@
 import Cocoa
 import Carbon
 
+// Simple file logger for debugging
+private func logToFile(_ message: String) {
+    let logPath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("whisper-hotkey.log")
+    let timestamp = ISO8601DateFormatter().string(from: Date())
+    let line = "[\(timestamp)] \(message)\n"
+    if let data = line.data(using: .utf8) {
+        if FileManager.default.fileExists(atPath: logPath.path) {
+            if let handle = try? FileHandle(forWritingTo: logPath) {
+                handle.seekToEndOfFile()
+                handle.write(data)
+                handle.closeFile()
+            }
+        } else {
+            try? data.write(to: logPath)
+        }
+    }
+}
+
 @MainActor
 class GlobalHotkeyManager: ObservableObject {
     @Published var isEnabled = true
 
-    private var eventTap: CFMachPort?
-    private var runLoopSource: CFRunLoopSource?
-    private var lastControlReleaseTime: Date?
-    private var controlWasPressed = false
-    private let doublePressInterval: TimeInterval = 0.4 // 400ms window for double press
+    private var hotKeyRef: EventHotKeyRef?
+    private var eventHandler: EventHandlerRef?
+
+    // Hotkey: Cmd+Shift+Space
+    private let keyCode: UInt32 = 49  // Space key
+    private let modifiers: UInt32 = UInt32(cmdKey | shiftKey)  // Cmd+Shift
 
     var onHotkeyTriggered: (() -> Void)?
 
+    // Static reference for the C callback
+    private static var sharedInstance: GlobalHotkeyManager?
+
     init() {
-        requestAccessibilityPermissions()
+        GlobalHotkeyManager.sharedInstance = self
+        logToFile("GlobalHotkeyManager initialized (Cmd+Shift+Space)")
+        print("GlobalHotkeyManager initialized (Cmd+Shift+Space)")
     }
 
     func startMonitoring() {
-        guard isEnabled else { return }
-
-        // Create event tap
-        let eventMask = (1 << CGEventType.flagsChanged.rawValue)
-
-        guard let eventTap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: CGEventMask(eventMask),
-            callback: { proxy, type, event, refcon in
-                guard let refcon = refcon else { return Unmanaged.passUnretained(event) }
-                let manager = Unmanaged<GlobalHotkeyManager>.fromOpaque(refcon).takeUnretainedValue()
-
-                // Handle synchronously to avoid timing issues
-                let flags = event.flags
-                let controlPressed = flags.contains(.maskControl)
-                let noOtherModifiers = !flags.contains(.maskShift) &&
-                                       !flags.contains(.maskAlternate) &&
-                                       !flags.contains(.maskCommand)
-
-                if noOtherModifiers {
-                    Task { @MainActor in
-                        manager.handleControlKey(isPressed: controlPressed)
-                    }
-                }
-
-                return Unmanaged.passUnretained(event)
-            },
-            userInfo: Unmanaged.passUnretained(self).toOpaque()
-        ) else {
-            print("❌ Failed to create event tap - check Accessibility permissions")
+        guard isEnabled else {
+            print("Hotkey monitoring disabled")
             return
         }
 
-        self.eventTap = eventTap
+        // Don't register twice
+        guard hotKeyRef == nil else {
+            print("Hotkey already registered")
+            return
+        }
 
-        // Create run loop source
-        runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+        // Install event handler
+        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
 
-        // Enable the tap
-        CGEvent.tapEnable(tap: eventTap, enable: true)
+        let status = InstallEventHandler(
+            GetApplicationEventTarget(),
+            { (_, event, _) -> OSStatus in
+                logToFile("🎉 Hotkey triggered!")
+                // Trigger the callback on main thread
+                Task { @MainActor in
+                    GlobalHotkeyManager.sharedInstance?.onHotkeyTriggered?()
+                }
+                return noErr
+            },
+            1,
+            &eventType,
+            nil,
+            &eventHandler
+        )
 
-        print("✅ Global hotkey monitoring started (Ctrl+Ctrl to record)")
+        guard status == noErr else {
+            print("Failed to install event handler: \(status)")
+            return
+        }
+
+        // Register the hotkey
+        let hotkeyID = EventHotKeyID(signature: OSType(0x574D4143), id: 1)  // 'WMAC'
+
+        let registerStatus = RegisterEventHotKey(
+            keyCode,
+            modifiers,
+            hotkeyID,
+            GetApplicationEventTarget(),
+            0,
+            &hotKeyRef
+        )
+
+        if registerStatus == noErr {
+            logToFile("✅ Global hotkey registered: Cmd+Shift+Space")
+            print("✅ Global hotkey registered: Cmd+Shift+Space")
+        } else {
+            logToFile("Failed to register hotkey: \(registerStatus)")
+            print("Failed to register hotkey: \(registerStatus)")
+            // Clean up event handler if hotkey registration failed
+            if let handler = eventHandler {
+                RemoveEventHandler(handler)
+                eventHandler = nil
+            }
+        }
     }
 
     func stopMonitoring() {
-        if let eventTap = eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
+        if let hotKey = hotKeyRef {
+            UnregisterEventHotKey(hotKey)
+            hotKeyRef = nil
+            print("Hotkey unregistered")
         }
 
-        if let runLoopSource = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+        if let handler = eventHandler {
+            RemoveEventHandler(handler)
+            eventHandler = nil
         }
-
-        eventTap = nil
-        runLoopSource = nil
-
-        print("Global hotkey monitoring stopped")
-    }
-
-    private func handleControlKey(isPressed: Bool) {
-        if isPressed && !controlWasPressed {
-            // Control key just pressed down
-            controlWasPressed = true
-        } else if !isPressed && controlWasPressed {
-            // Control key just released
-            controlWasPressed = false
-            let now = Date()
-
-            if let lastRelease = lastControlReleaseTime {
-                let interval = now.timeIntervalSince(lastRelease)
-
-                if interval <= doublePressInterval {
-                    // Double press detected!
-                    lastControlReleaseTime = nil
-                    onHotkeyTriggered?()
-                    return
-                }
-            }
-
-            lastControlReleaseTime = now
-        }
-    }
-
-    private func requestAccessibilityPermissions() {
-        let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
-        let accessEnabled = AXIsProcessTrustedWithOptions(options)
-
-        if !accessEnabled {
-            print("⚠️  Accessibility access not granted. Please enable in System Settings.")
-        } else {
-            print("✅ Accessibility access granted")
-        }
-    }
-
-    func checkAccessibilityPermissions() -> Bool {
-        return AXIsProcessTrusted()
     }
 
     deinit {
-        // Clean up event tap directly since we can't call async methods from deinit
-        if let eventTap = eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
+        if let hotKey = hotKeyRef {
+            UnregisterEventHotKey(hotKey)
         }
-
-        if let runLoopSource = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+        if let handler = eventHandler {
+            RemoveEventHandler(handler)
         }
+        // Note: Can't clear sharedInstance here due to actor isolation
+        // The singleton pattern via AppState.shared ensures proper lifecycle
     }
 }

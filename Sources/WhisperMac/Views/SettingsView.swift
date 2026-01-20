@@ -53,7 +53,7 @@ struct SettingsView: View {
                 .foregroundColor(DesignSystem.Colors.textPrimary)
 
             Toggle(isOn: $appState.globalHotkeyEnabled) {
-                Text("Enable Ctrl+Ctrl hotkey")
+                Text("Enable Cmd+Shift+Space hotkey")
                     .font(DesignSystem.Typography.body)
             }
             .onChange(of: appState.globalHotkeyEnabled) { _ in
@@ -66,7 +66,7 @@ struct SettingsView: View {
                     .foregroundColor(DesignSystem.Colors.textSecondary)
                     .fontWeight(.semibold)
 
-                Text("• Press Ctrl twice quickly to start recording")
+                Text("• Press Cmd+Shift+Space to start recording")
                     .font(DesignSystem.Typography.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
@@ -74,7 +74,7 @@ struct SettingsView: View {
                     .font(DesignSystem.Typography.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
-                Text("• Press Ctrl twice again to stop and transcribe")
+                Text("• Press Cmd+Shift+Space again to stop and transcribe")
                     .font(DesignSystem.Typography.caption)
                     .foregroundColor(DesignSystem.Colors.textSecondary)
 
@@ -85,19 +85,6 @@ struct SettingsView: View {
             .padding(DesignSystem.Spacing.sm)
             .background(DesignSystem.Colors.accent.opacity(0.1))
             .cornerRadius(DesignSystem.CornerRadius.sm)
-
-            if !appState.hotkeyManager.checkAccessibilityPermissions() {
-                HStack(spacing: DesignSystem.Spacing.sm) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(DesignSystem.Colors.warning)
-                    Text("Accessibility access required. Please enable in System Settings → Privacy & Security → Accessibility")
-                        .font(DesignSystem.Typography.caption)
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                }
-                .padding(DesignSystem.Spacing.sm)
-                .background(DesignSystem.Colors.warning.opacity(0.1))
-                .cornerRadius(DesignSystem.CornerRadius.sm)
-            }
         }
     }
 
@@ -162,7 +149,7 @@ struct SettingsView: View {
                     Text("Version:")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("1.0.0")
+                    Text("1.0.2")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
@@ -171,9 +158,27 @@ struct SettingsView: View {
                     Text("Powered by:")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("OpenAI Whisper")
+                    Text("Apple Speech Recognition")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textPrimary)
+                }
+
+                HStack {
+                    Text("Created by:")
+                        .font(DesignSystem.Typography.callout)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    Text("Dr. Harshvardhan")
+                        .font(DesignSystem.Typography.callout)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
+                }
+
+                HStack {
+                    Text("Built with:")
+                        .font(DesignSystem.Typography.callout)
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    Text("Claude Code")
+                        .font(DesignSystem.Typography.callout)
+                        .foregroundColor(DesignSystem.Colors.accent)
                 }
             }
 
