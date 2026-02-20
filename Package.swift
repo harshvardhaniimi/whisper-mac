@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "WhisperMac",
+    name: "Kalam",
     platforms: [
         .macOS(.v13)
     ],
     products: [
         .executable(
-            name: "WhisperMac",
-            targets: ["WhisperMac"]
+            name: "Kalam",
+            targets: ["Kalam"]
         )
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "WhisperMac",
+            name: "Kalam",
             dependencies: [],
-            path: "Sources/WhisperMac",
+            path: "Sources/Kalam",
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
                 .linkedFramework("Speech"),

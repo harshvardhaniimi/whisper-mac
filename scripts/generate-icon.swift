@@ -3,8 +3,8 @@
 import Cocoa
 import Foundation
 
-// Icon Generator for WhisperMac
-// Creates a beautiful waveform-inspired app icon
+// Icon generator for Kalam app bundle.
+// Creates a waveform-inspired app icon with subtle Devanagari कलम accent
 
 func createIcon(size: CGFloat) -> NSImage {
     let image = NSImage(size: NSSize(width: size, height: size))
@@ -43,18 +43,18 @@ func createIcon(size: CGFloat) -> NSImage {
     bgPath.fill()
     context.restoreGState()
 
-    // Draw waveform bars
+    // Draw waveform bars (shifted up slightly to make room for कलम)
     let waveformColor = NSColor.white
     let barCount = 5
     let totalWidth = size * 0.55
     let barWidth = size * 0.08
     let spacing = (totalWidth - (CGFloat(barCount) * barWidth)) / CGFloat(barCount - 1)
     let startX = (size - totalWidth) / 2
-    let centerY = size / 2
+    let centerY = size * 0.54  // slightly above center
 
     // Bar heights (normalized) - creating a waveform pattern
     let heights: [CGFloat] = [0.35, 0.65, 1.0, 0.65, 0.35]
-    let maxBarHeight = size * 0.45
+    let maxBarHeight = size * 0.40
 
     waveformColor.setFill()
 
@@ -66,6 +66,22 @@ func createIcon(size: CGFloat) -> NSImage {
         let barRect = NSRect(x: x, y: y, width: barWidth, height: barHeight)
         let barPath = NSBezierPath(roundedRect: barRect, xRadius: barWidth / 2, yRadius: barWidth / 2)
         barPath.fill()
+    }
+
+    // Draw कलम (Devanagari) below the waveform — only at larger icon sizes
+    if size >= 128 {
+        let devanagariText = "कलम" as NSString
+        let fontSize = size * 0.12
+        let font = NSFont(name: "Devanagari Sangam MN", size: fontSize)
+            ?? NSFont.systemFont(ofSize: fontSize)
+        let textAttributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.white.withAlphaComponent(0.6)
+        ]
+        let textSize = devanagariText.size(withAttributes: textAttributes)
+        let textX = (size - textSize.width) / 2
+        let textY = size * 0.18 - textSize.height / 2  // below waveform
+        devanagariText.draw(at: NSPoint(x: textX, y: textY), withAttributes: textAttributes)
     }
 
     // Add subtle highlight at top
@@ -119,6 +135,16 @@ func createIconSet(outputPath: String) {
         }
     }
 
+    // Also save a 1024x1024 PNG for App Store
+    let appStoreIcon = createIcon(size: 1024)
+    let appStoreIconPath = "\(outputPath)/AppIcon-1024.png"
+    if let tiffData = appStoreIcon.tiffRepresentation,
+       let bitmap = NSBitmapImageRep(data: tiffData),
+       let pngData = bitmap.representation(using: .png, properties: [:]) {
+        try? pngData.write(to: URL(fileURLWithPath: appStoreIconPath))
+        print("  Created AppIcon-1024.png (App Store)")
+    }
+
     // Convert to icns using iconutil
     let icnsPath = "\(outputPath)/AppIcon.icns"
     let process = Process()
@@ -149,6 +175,6 @@ if CommandLine.arguments.count > 1 {
     outputPath = "."
 }
 
-print("🎨 Generating WhisperMac icon...")
+print("🎨 Generating Kalam app icon...")
 createIconSet(outputPath: outputPath)
 print("✅ Icon generated!")

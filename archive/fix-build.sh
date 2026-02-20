@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# fix-build.sh - Fix common build issues for Whisper Mac project
+# fix-build.sh - Fix common build issues for Kalam project
 
 set -e
 
-echo "🔧 Fixing Whisper Mac build issues..."
+echo "🔧 Fixing Kalam build issues..."
 echo ""
 
 # Check if we're on macOS
@@ -20,7 +20,7 @@ clean_xcode_data() {
     # Clean derived data for this project
     if [ -d ~/Library/Developer/Xcode/DerivedData ]; then
         echo "  → Removing Xcode DerivedData..."
-        rm -rf ~/Library/Developer/Xcode/DerivedData/WhisperMac-* 2>/dev/null || true
+        rm -rf ~/Library/Developer/Xcode/DerivedData/Kalam-* 2>/dev/null || true
         echo "    ✓ Cleared Xcode DerivedData"
     fi
 

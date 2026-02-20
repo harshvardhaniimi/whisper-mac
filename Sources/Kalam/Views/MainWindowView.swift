@@ -54,7 +54,7 @@ struct MainWindowView: View {
 
     private var toolbar: some View {
         HStack {
-            Text("Whisper")
+            Text(AppBrand.displayName)
                 .font(DesignSystem.Typography.title2)
                 .foregroundColor(DesignSystem.Colors.textPrimary)
 
@@ -268,4 +268,3 @@ struct MainWindowView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 }
-

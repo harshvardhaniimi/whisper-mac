@@ -1,15 +1,19 @@
 #!/bin/bash
 
-# Create a release build of WhisperMac
+# Create a release build of the app
 # Usage: ./scripts/create-release.sh [version]
 
-set -e
+set -euo pipefail
 
-VERSION=${1:-"1.0.0"}
-APP_NAME="WhisperMac"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../release.config.sh"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${PROJECT_ROOT}"
+
+VERSION="${1:-${DEFAULT_VERSION}}"
 BUILD_DIR=".build/release-${VERSION}"
 ZIP_NAME_VERSIONED="${APP_NAME}-v${VERSION}.zip"
-ZIP_NAME_LATEST="${APP_NAME}.zip"
+ZIP_NAME_LATEST="${RELEASE_ZIP_NAME}"
 
 echo "🔨 Building ${APP_NAME} v${VERSION}..."
 
@@ -23,10 +27,10 @@ mkdir -p "${BUILD_DIR}/${APP_NAME}.app/Contents/Resources"
 
 # Generate app icon
 echo "🎨 Generating app icon..."
-swift scripts/generate-icon.swift "${BUILD_DIR}/${APP_NAME}.app/Contents/Resources"
+swift "${SCRIPT_DIR}/generate-icon.swift" "${BUILD_DIR}/${APP_NAME}.app/Contents/Resources"
 
 # Copy executable
-cp .build/release/WhisperMac "${BUILD_DIR}/${APP_NAME}.app/Contents/MacOS/"
+cp ".build/release/${EXECUTABLE_NAME}" "${BUILD_DIR}/${APP_NAME}.app/Contents/MacOS/${EXECUTABLE_NAME}"
 
 # Create Info.plist with version
 cat > "${BUILD_DIR}/${APP_NAME}.app/Contents/Info.plist" << PLIST
@@ -37,13 +41,15 @@ cat > "${BUILD_DIR}/${APP_NAME}.app/Contents/Info.plist" << PLIST
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>${APP_NAME}</string>
+    <string>${EXECUTABLE_NAME}</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.whisper.mac</string>
+    <string>${BUNDLE_ID}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>CFBundleDisplayName</key>
+    <string>${APP_NAME}</string>
     <key>CFBundleName</key>
     <string>${APP_NAME}</string>
     <key>CFBundlePackageType</key>
@@ -53,15 +59,19 @@ cat > "${BUILD_DIR}/${APP_NAME}.app/Contents/Info.plist" << PLIST
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
     <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
+    <string>${MIN_MACOS_VERSION}</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>WhisperMac needs microphone access to transcribe your speech.</string>
+    <string>${MICROPHONE_USAGE_DESCRIPTION}</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>WhisperMac uses speech recognition to convert your voice to text.</string>
+    <string>${SPEECH_USAGE_DESCRIPTION}</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>WhisperMac needs to send keystrokes to insert transcribed text at your cursor.</string>
+    <string>${APPLE_EVENTS_USAGE_DESCRIPTION}</string>
+    <key>NSSystemAdministrationUsageDescription</key>
+    <string>${ACCESSIBILITY_USAGE_DESCRIPTION}</string>
+    <key>NSUserNotificationUsageDescription</key>
+    <string>${NOTIFICATIONS_USAGE_DESCRIPTION}</string>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2024. MIT License.</string>
+    <string>${COPYRIGHT_TEXT}</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSHighResolutionCapable</key>
@@ -70,9 +80,14 @@ cat > "${BUILD_DIR}/${APP_NAME}.app/Contents/Info.plist" << PLIST
 </plist>
 PLIST
 
-# Ad-hoc code sign the app
-echo "🔏 Code signing (ad-hoc)..."
-codesign --force --deep --sign - "${BUILD_DIR}/${APP_NAME}.app"
+# Code sign the app
+if [ -n "${CODESIGN_IDENTITY:-}" ]; then
+    echo "🔏 Code signing with identity: ${CODESIGN_IDENTITY}"
+    codesign --force --deep --options runtime --sign "${CODESIGN_IDENTITY}" "${BUILD_DIR}/${APP_NAME}.app"
+else
+    echo "🔏 Code signing (ad-hoc)..."
+    codesign --force --deep --sign - "${BUILD_DIR}/${APP_NAME}.app"
+fi
 
 # Create zips for distribution
 echo "📦 Creating release zips..."
@@ -95,7 +110,7 @@ echo "   3. Upload BOTH zip files to the release"
 echo "   4. The docs page 'latest' link will automatically work"
 echo ""
 echo "⚠️  Users downloading from GitHub will need to:"
-echo "   - Run: xattr -cr ~/Downloads/WhisperMac.app"
+echo "   - Run: xattr -cr ~/Downloads/${APP_NAME}.app"
 echo "   - Then right-click → Open (first time, to bypass Gatekeeper)"
 echo "   - Grant Accessibility permissions in System Settings"
 echo ""

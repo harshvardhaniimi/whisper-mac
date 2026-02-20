@@ -20,7 +20,7 @@ class ModelManager: ObservableObject {
     func getModelPath(_ model: WhisperModel) -> URL {
         // Not used with Apple Speech, but kept for compatibility
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return appSupport.appendingPathComponent("WhisperMac/models/\(model.filename)")
+        return appSupport.appendingPathComponent("\(AppBrand.appSupportDirectoryName)/models/\(model.filename)")
     }
 
     func isModelInstalled(_ model: WhisperModel) -> Bool {

@@ -85,7 +85,7 @@ class NotificationService: ObservableObject {
         guard notificationsAuthorized else { return }
         sendNotification(
             identifier: "error-\(UUID().uuidString)",
-            title: "Whisper Error",
+            title: "\(AppBrand.displayName) Error",
             body: message
         )
     }

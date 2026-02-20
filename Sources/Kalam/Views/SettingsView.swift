@@ -4,6 +4,12 @@ struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var modelManager = ModelManager()
 
+    private var appVersionLabel: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? version
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -20,10 +26,12 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: DesignSystem.Spacing.xl) {
+                    #if !APP_STORE_BUILD
                     // Hotkey section
                     hotkeySection
 
                     Divider()
+                    #endif
 
                     // Models section
                     modelSection
@@ -44,6 +52,7 @@ struct SettingsView: View {
         .frame(width: 500, height: 500)
     }
 
+    #if !APP_STORE_BUILD
     // MARK: - Hotkey Section
 
     private var hotkeySection: some View {
@@ -87,16 +96,17 @@ struct SettingsView: View {
             .cornerRadius(DesignSystem.CornerRadius.sm)
         }
     }
+    #endif
 
     // MARK: - Model Section
 
     private var modelSection: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            Text("Whisper Models")
+            Text("Speech Models")
                 .font(DesignSystem.Typography.headline)
                 .foregroundColor(DesignSystem.Colors.textPrimary)
 
-            Text("Download and manage Whisper models. Larger models provide better accuracy but require more resources.")
+            Text("Download and manage speech models. Larger models provide better accuracy but require more resources.")
                 .font(DesignSystem.Typography.caption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
 
@@ -140,16 +150,22 @@ struct SettingsView: View {
 
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            Text("About")
-                .font(DesignSystem.Typography.headline)
-                .foregroundColor(DesignSystem.Colors.textPrimary)
+            HStack(alignment: .firstTextBaseline, spacing: DesignSystem.Spacing.sm) {
+                Text("About")
+                    .font(DesignSystem.Typography.headline)
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+
+                Text("कलम")
+                    .font(.system(size: 14))
+                    .foregroundColor(DesignSystem.Colors.accent.opacity(0.5))
+            }
 
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.xs) {
                 HStack {
                     Text("Version:")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("1.0.2")
+                    Text(appVersionLabel)
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
@@ -164,21 +180,21 @@ struct SettingsView: View {
                 }
 
                 HStack {
-                    Text("Created by:")
+                    Text("App:")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("Dr. Harshvardhan")
+                    Text(AppBrand.displayName)
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
 
                 HStack {
-                    Text("Built with:")
+                    Text("Bundle ID:")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("Claude Code")
+                    Text(Bundle.main.bundleIdentifier ?? "Unknown")
                         .font(DesignSystem.Typography.callout)
-                        .foregroundColor(DesignSystem.Colors.accent)
+                        .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
             }
 
@@ -263,4 +279,3 @@ struct ModelRow: View {
         .cornerRadius(DesignSystem.CornerRadius.sm)
     }
 }
-

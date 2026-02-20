@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This guide helps resolve common build issues with the Whisper Mac project.
+This guide helps resolve common build issues with the Kalam project.
 
 ## Quick Fix
 
@@ -33,7 +33,7 @@ Invalid Exclude /Users/username/...
 ./fix-build.sh
 
 # Option 2: Manual cleanup
-rm -rf ~/Library/Developer/Xcode/DerivedData/WhisperMac-*
+rm -rf ~/Library/Developer/Xcode/DerivedData/Kalam-*
 rm -rf .build
 rm -rf .swiftpm
 ```
@@ -165,7 +165,7 @@ rm -rf Sources/WhisperCpp/src
 rm -rf Sources/WhisperCpp/include
 rm -rf .build
 rm -rf .swiftpm
-rm -rf ~/Library/Developer/Xcode/DerivedData/WhisperMac-*
+rm -rf ~/Library/Developer/Xcode/DerivedData/Kalam-*
 
 # 2. Run setup
 ./setup.sh

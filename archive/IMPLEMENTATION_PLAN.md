@@ -1,4 +1,4 @@
-# Local Whisper Mac App - Implementation Plan
+# Local Kalam App - Implementation Plan
 
 ## Project Overview
 Build a native macOS speech-to-text application using OpenAI's open-source Whisper model, running entirely locally with no cloud dependencies. The app should have a sophisticated, retro-inspired design with native macOS aesthetics similar to Apple's first-party apps or Claude's refined interface.
@@ -320,11 +320,11 @@ dependencies: [
 ## Project Structure
 
 ```
-WhisperMac/
-├── WhisperMac.xcodeproj
-├── WhisperMac/
+Kalam/
+├── Kalam.xcodeproj
+├── Kalam/
 │   ├── App/
-│   │   ├── WhisperMacApp.swift          # App entry point
+│   │   ├── KalamApp.swift               # App entry point
 │   │   └── AppDelegate.swift            # App delegate for menu bar
 │   ├── Models/
 │   │   ├── Transcription.swift          # Data models
@@ -366,7 +366,7 @@ WhisperMac/
 │   └── Bridge/
 │       ├── WhisperBridge.h              # C++ bridge header
 │       └── WhisperBridge.mm             # C++ bridge implementation
-├── WhisperMacTests/
+├── KalamTests/
 └── README.md
 ```
 

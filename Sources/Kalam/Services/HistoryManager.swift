@@ -8,7 +8,7 @@ class HistoryManager: ObservableObject {
     init() {
         // Set up history file in Application Support
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let appDirectory = appSupport.appendingPathComponent("WhisperMac", isDirectory: true)
+        let appDirectory = appSupport.appendingPathComponent(AppBrand.appSupportDirectoryName, isDirectory: true)
 
         // Create directory if needed
         try? FileManager.default.createDirectory(at: appDirectory, withIntermediateDirectories: true)

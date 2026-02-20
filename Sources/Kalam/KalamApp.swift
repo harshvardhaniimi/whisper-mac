@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct WhisperMacApp: App {
+struct KalamApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
@@ -24,7 +24,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Whisper")
+            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: AppBrand.displayName)
             button.action = #selector(togglePopover)
             button.target = self
         }
@@ -62,14 +62,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             flashCount += 1
 
             if flashCount % 2 == 0 {
-                button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Whisper")
+                button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: AppBrand.displayName)
             } else {
                 button.image = NSImage(systemSymbolName: "waveform.circle.fill", accessibilityDescription: "Recording")
             }
 
             if flashCount >= 6 {
                 timer.invalidate()
-                button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Whisper")
+                button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: AppBrand.displayName)
             }
         }
     }
@@ -95,7 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 defer: false
             )
             window.center()
-            window.title = "Whisper"
+            window.title = AppBrand.displayName
             window.contentView = NSHostingView(
                 rootView: MainWindowView()
                     .environmentObject(AppState.shared)

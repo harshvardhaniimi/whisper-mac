@@ -2,7 +2,16 @@
 
 set -e
 
-echo "🎤 Setting up Whisper Mac..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+if [ -f "${SCRIPT_DIR}/release.config.sh" ]; then
+    source "${SCRIPT_DIR}/release.config.sh"
+else
+    APP_NAME="${APP_NAME:-Kalam}"
+    APP_SUPPORT_SUBDIR="${APP_SUPPORT_SUBDIR:-Kalam}"
+fi
+
+echo "🎤 Setting up ${APP_NAME}..."
 echo ""
 
 # Check if we're on macOS
@@ -162,5 +171,5 @@ echo ""
 echo "4. Run the app (⌘+R)"
 echo ""
 echo "Note: The app will download Whisper models automatically on first launch."
-echo "      Models are stored in ~/Library/Application Support/WhisperMac/models/"
+echo "      Models are stored in ~/Library/Application Support/${APP_SUPPORT_SUBDIR}/models/"
 echo ""

@@ -40,7 +40,7 @@ fastlane/test_output
 # Build files
 build/
 Build/
-WhisperMac.app/
+Kalam.app/
 *.zip
 
 # whisper.cpp clone and generated sources
@@ -63,3 +63,6 @@ Sources/WhisperCpp/include/
 .vscode/
 .idea/
 *.sublime-*
+
+# Claude Code skills (reference only, not part of the app)
+claude-code-apple-skills/

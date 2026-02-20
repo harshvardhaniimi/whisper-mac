@@ -48,7 +48,7 @@ struct MainView: View {
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(DesignSystem.Colors.accent)
 
-            Text("Whisper")
+            Text(AppBrand.displayName)
                 .font(DesignSystem.Typography.title3)
                 .foregroundColor(DesignSystem.Colors.textPrimary)
 
@@ -96,9 +96,15 @@ struct MainView: View {
                 .font(DesignSystem.Typography.title3)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
 
-            Text("Click record to start")
+            #if APP_STORE_BUILD
+            Text("Click record or use Cmd+V to paste")
                 .font(DesignSystem.Typography.callout)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
+            #else
+            Text("Click record or press Cmd+Shift+Space")
+                .font(DesignSystem.Typography.callout)
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+            #endif
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -209,4 +215,3 @@ struct MainView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 }
-

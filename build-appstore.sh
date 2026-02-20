@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Build the App Store (sandboxed) variant of Kalam.
+# This build disables global hotkeys and CGEvent text insertion
+# which are incompatible with macOS App Sandbox.
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,9 +12,9 @@ cd "${SCRIPT_DIR}"
 
 VERSION="${1:-${DEFAULT_VERSION}}"
 
-# Build the app
-echo "🔨 Building ${APP_NAME} v${VERSION}..."
-swift build -c release
+# Build with APP_STORE_BUILD flag
+echo "🔨 Building ${APP_NAME} v${VERSION} (App Store)..."
+swift build -c release -Xswiftc -DAPP_STORE_BUILD
 
 # Create app bundle structure
 APP_DIR="$APP_NAME.app"
@@ -32,7 +36,7 @@ swift "${SCRIPT_DIR}/scripts/generate-icon.swift" "$RESOURCES_DIR"
 # Copy executable
 cp ".build/release/${EXECUTABLE_NAME}" "$MACOS_DIR/${EXECUTABLE_NAME}"
 
-# Create Info.plist
+# Create Info.plist (App Store variant — no Apple Events or Accessibility descriptions)
 cat > "$CONTENTS_DIR/Info.plist" << PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -64,19 +68,11 @@ cat > "$CONTENTS_DIR/Info.plist" << PLIST
     <string>${MICROPHONE_USAGE_DESCRIPTION}</string>
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>${SPEECH_USAGE_DESCRIPTION}</string>
-    <key>NSAppleEventsUsageDescription</key>
-    <string>${APPLE_EVENTS_USAGE_DESCRIPTION}</string>
-    <key>NSSystemAdministrationUsageDescription</key>
-    <string>${ACCESSIBILITY_USAGE_DESCRIPTION}</string>
     <key>NSUserNotificationUsageDescription</key>
     <string>${NOTIFICATIONS_USAGE_DESCRIPTION}</string>
     <key>NSHumanReadableCopyright</key>
     <string>${COPYRIGHT_TEXT}</string>
     <key>LSUIElement</key>
-    <true/>
-    <key>NSSupportsAutomaticTermination</key>
-    <true/>
-    <key>NSSupportsSuddenTermination</key>
     <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
@@ -84,15 +80,30 @@ cat > "$CONTENTS_DIR/Info.plist" << PLIST
 </plist>
 PLIST
 
-# Code sign the app
+# Copy entitlements
+cp "${SCRIPT_DIR}/Kalam.entitlements" "$CONTENTS_DIR/Resources/"
+
+# Code sign with entitlements
 if [ -n "${CODESIGN_IDENTITY:-}" ]; then
     echo "🔏 Code signing with identity: ${CODESIGN_IDENTITY}"
-    codesign --force --deep --options runtime --sign "${CODESIGN_IDENTITY}" "$APP_DIR"
+    codesign --force --deep --options runtime \
+        --entitlements "${SCRIPT_DIR}/Kalam.entitlements" \
+        --sign "${CODESIGN_IDENTITY}" "$APP_DIR"
 else
-    echo "🔏 Code signing (ad-hoc)..."
-    codesign --force --deep --sign - "$APP_DIR"
+    echo "🔏 Code signing (ad-hoc) with entitlements..."
+    codesign --force --deep \
+        --entitlements "${SCRIPT_DIR}/Kalam.entitlements" \
+        --sign - "$APP_DIR"
 fi
 
 echo ""
-echo "✅ App bundle created: $APP_DIR"
-echo "   To run: open $APP_DIR"
+echo "✅ App Store build created: $APP_DIR"
+echo "   Features disabled: Global hotkey, auto text insertion"
+echo "   Features enabled: Recording, transcription, clipboard copy"
+echo ""
+echo "   To test: open $APP_DIR"
+echo ""
+echo "   For App Store submission:"
+echo "   1. Sign with your App Store certificate"
+echo "   2. Create a .pkg installer: productbuild --component $APP_DIR /Applications ${APP_NAME}.pkg"
+echo "   3. Upload via Transporter or xcrun altool"

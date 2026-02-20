@@ -1,6 +1,6 @@
 # Build Instructions
 
-This guide will help you build and run the Whisper Mac app from source.
+This guide will help you build and run the Kalam app from source.
 
 ## Prerequisites
 
@@ -45,7 +45,7 @@ Alternatively, you can open it from Xcode:
 ### 4. Build the Project
 
 In Xcode:
-- Select the `WhisperMac` scheme
+- Select the `Kalam` scheme
 - Press ⌘+B to build
 - Or Product → Build
 
@@ -69,7 +69,7 @@ On first launch, you'll need to download at least one Whisper model:
 
 Models are downloaded from Hugging Face and stored in:
 ```
-~/Library/Application Support/WhisperMac/models/
+~/Library/Application Support/Kalam/models/
 ```
 
 ## Building from Command Line
@@ -123,7 +123,7 @@ If issues persist after setup:
 
 Go to:
 - System Settings → Privacy & Security → Microphone
-- Enable permission for "WhisperMac"
+- Enable permission for "Kalam"
 
 ### App doesn't appear in menu bar
 
@@ -148,8 +148,8 @@ whisper-mac/
 ├── Info.plist                 # App configuration
 ├── setup.sh                   # Setup script
 ├── Sources/
-│   ├── WhisperMac/           # Main app code
-│   │   ├── WhisperMacApp.swift      # App entry point
+│   ├── Kalam/               # Main app code
+│   │   ├── KalamApp.swift           # App entry point
 │   │   ├── Models/                   # Data models
 │   │   ├── Services/                 # Core services
 │   │   └── Views/                    # UI components
@@ -179,7 +179,7 @@ To test audio recording:
 5. Wait for transcription to complete
 
 To test file transcription:
-1. Open the main window (click Whisper in menu bar, then expand)
+1. Open the main window (click Kalam in menu bar, then expand)
 2. Drag and drop an audio file (MP3, WAV, M4A, etc.)
 3. Wait for transcription
 

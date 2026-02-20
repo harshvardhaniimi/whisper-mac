@@ -1,6 +1,6 @@
-# Whisper Mac 🎤
+# Kalam 🎤
 
-A beautiful, native macOS app for speech-to-text transcription using OpenAI's Whisper model. Completely local, private, and free.
+A beautiful, native macOS app for speech-to-text transcription using Apple Speech Recognition. Completely local, private, and free.
 
 ![macOS](https://img.shields.io/badge/macOS-13.0+-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
@@ -37,7 +37,7 @@ A beautiful, native macOS app for speech-to-text transcription using OpenAI's Wh
 *(Menu Bar App)*
 ```
 ┌─────────────────────────────────────┐
-│ 🎤 Whisper              🕐 ⚙️       │
+│ 🎤 Kalam                🕐 ⚙️       │
 ├─────────────────────────────────────┤
 │                                     │
 │   Ready to transcribe               │
@@ -66,34 +66,40 @@ Then right-click the app in Applications and select "Open" (first time only).
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/whisper-mac.git
+   git clone https://github.com/harshvardhaniimi/whisper-mac.git
    cd whisper-mac
    ```
 
-2. **Run the setup script:**
+2. **Build the app:**
    ```bash
-   chmod +x setup.sh
-   ./setup.sh
+   ./build-app.sh
    ```
 
-3. **Open in Xcode:**
+3. **Run:**
    ```bash
-   open Package.swift
+   open Kalam.app
    ```
 
-4. **Build and run** (⌘+R)
-
-See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build instructions.
+Or open `Package.swift` in Xcode and press ⌘+R.
 
 ### Option 3: Manual Download
 
-1. **Download** the latest `WhisperMac.zip` from [Releases](https://github.com/harshvardhaniimi/whisper-mac/releases)
-2. **Unzip** and move `WhisperMac.app` to your Applications folder
+1. **Download** the latest `Kalam.zip` from [Releases](https://github.com/harshvardhaniimi/whisper-mac/releases)
+2. **Unzip** and move `Kalam.app` to your Applications folder
 3. **Remove quarantine** (required for apps not notarized with Apple):
    ```bash
-   xattr -cr /Applications/WhisperMac.app
+   xattr -cr /Applications/Kalam.app
    ```
 4. **Open the app** - Right-click → Open (first time only)
+
+## Rebranding
+
+If you want to ship this as your own branded product:
+
+1. Edit `release.config.sh` (app name, bundle ID, repo links, permission copy)
+2. Run `./scripts/create-release.sh <version>` to generate release artifacts
+3. (Optional) Run `./scripts/notarize-release.sh <version>` for Developer ID notarization
+4. See `archive/LAUNCH_BLUEPRINT.md` for additional Gumroad/App Store planning notes
 
 ## Quick Start
 
@@ -108,7 +114,7 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build instructio
 
 The fastest way to transcribe:
 
-1. **Start recording** - Press Ctrl key twice quickly (anywhere in macOS)
+1. **Start recording** - Press Cmd+Shift+Space (anywhere in macOS)
 2. **Speak** - Say what you want to transcribe
 3. **Stop & transcribe** - Press Cmd+Shift+Space again
 4. **Done!** - Text appears at your cursor and is copied to clipboard
@@ -173,7 +179,7 @@ The fastest way to transcribe:
 
 Models are downloaded once from Hugging Face and stored locally:
 ```
-~/Library/Application Support/WhisperMac/models/
+~/Library/Application Support/Kalam/models/
 ```
 
 ## Technical Details
@@ -182,7 +188,7 @@ Models are downloaded once from Hugging Face and stored locally:
 - **Language**: Swift 5.9+
 - **UI Framework**: SwiftUI
 - **Audio**: AVFoundation
-- **ML Backend**: whisper.cpp (optimized C++ implementation)
+- **ML Backend**: Apple Speech Recognition (SFSpeechRecognizer)
 - **Acceleration**: Metal + Accelerate frameworks
 
 **Design Philosophy:**
@@ -234,8 +240,6 @@ You can:
 
 Contributions are welcome! Please feel free to submit pull requests or open issues.
 
-See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for development setup.
-
 ## Troubleshooting
 
 **App doesn't appear in menu bar:**
@@ -254,12 +258,12 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for development setup.
 
 **Microphone not working:**
 - System Settings → Privacy & Security → Microphone
-- Enable permission for WhisperMac
+- Enable permission for Kalam
 
 **Model didn't auto-download on first launch:**
 - Check internet connection
 - Go to Settings and manually download the base model
-- Check ~/Library/Application Support/WhisperMac/models/
+- Check ~/Library/Application Support/Kalam/models/
 
 **Poor transcription quality:**
 - Try a larger model (small or medium)
@@ -279,16 +283,16 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for development setup.
 
 ## Uninstall
 
-To completely remove WhisperMac and all its data:
+To completely remove Kalam and all its data:
 
 ```bash
 curl -sL https://raw.githubusercontent.com/harshvardhaniimi/whisper-mac/main/uninstall.sh | bash
 ```
 
 Or manually:
-1. Quit WhisperMac
-2. Delete `/Applications/WhisperMac.app`
-3. Delete `~/Library/Application Support/WhisperMac/` (contains models and history)
+1. Quit Kalam
+2. Delete `/Applications/Kalam.app`
+3. Delete `~/Library/Application Support/Kalam/` (contains models and history)
 
 ## Contributing & Feedback
 
@@ -297,7 +301,7 @@ Or manually:
 - 🐛 **Bug Reports**: [Open an issue](https://github.com/harshvardhaniimi/whisper-mac/issues) with detailed steps to reproduce
 - 💡 **Feature Requests**: Describe the feature and why it would be useful
 - 🔧 **Pull Requests**: Contributions are welcome! Please open an issue first to discuss major changes
-- 💬 **General Feedback**: Share your experience using WhisperMac
+- 💬 **General Feedback**: Share your experience using Kalam
 
 ### A Note on Development
 
@@ -320,8 +324,6 @@ This project uses OpenAI's Whisper model, which is also licensed under MIT.
 
 ## Support
 
-- 📖 Read the [Build Instructions](BUILD_INSTRUCTIONS.md)
-- 📖 Read the [Implementation Plan](IMPLEMENTATION_PLAN.md)
 - 🐛 Report issues on GitHub
 - ⭐ Star the project if you find it useful!
 

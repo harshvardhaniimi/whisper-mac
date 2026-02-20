@@ -1,9 +1,10 @@
+#if !APP_STORE_BUILD
 import Cocoa
 import Carbon
 
 // Simple file logger for debugging
 private func logToFile(_ message: String) {
-    let logPath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("whisper-hotkey.log")
+    let logPath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("kalam-hotkey.log")
     let timestamp = ISO8601DateFormatter().string(from: Date())
     let line = "[\(timestamp)] \(message)\n"
     if let data = line.data(using: .utf8) {
@@ -78,7 +79,7 @@ class GlobalHotkeyManager: ObservableObject {
         }
 
         // Register the hotkey
-        let hotkeyID = EventHotKeyID(signature: OSType(0x574D4143), id: 1)  // 'WMAC'
+        let hotkeyID = EventHotKeyID(signature: OSType(0x4B4C4D00), id: 1)  // 'KLM\0'
 
         let registerStatus = RegisterEventHotKey(
             keyCode,
@@ -127,3 +128,24 @@ class GlobalHotkeyManager: ObservableObject {
         // The singleton pattern via AppState.shared ensures proper lifecycle
     }
 }
+
+#else
+
+// App Store build: no-op stub (Carbon global hotkeys not allowed in sandbox)
+import Foundation
+
+@MainActor
+class GlobalHotkeyManager: ObservableObject {
+    @Published var isEnabled = false
+
+    var onHotkeyTriggered: (() -> Void)?
+
+    init() {
+        print("GlobalHotkeyManager disabled (App Store build)")
+    }
+
+    func startMonitoring() {}
+    func stopMonitoring() {}
+}
+
+#endif

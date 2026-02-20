@@ -48,7 +48,9 @@ class AppState: ObservableObject {
         self.notificationService = NotificationService.shared
 
         setupBindings()
+        #if !APP_STORE_BUILD
         setupHotkeyHandler()
+        #endif
     }
 
     private func setupBindings() {
@@ -63,6 +65,7 @@ class AppState: ObservableObject {
             .assign(to: &$recordingDuration)
     }
 
+    #if !APP_STORE_BUILD
     private func setupHotkeyHandler() {
         hotkeyManager.onHotkeyTriggered = { [weak self] in
             Task { @MainActor in
@@ -70,6 +73,7 @@ class AppState: ObservableObject {
             }
         }
     }
+    #endif
 
     func initialize() async {
         guard !isInitialSetupComplete else { return }
@@ -80,26 +84,33 @@ class AppState: ObservableObject {
             print("Speech recognition not authorized")
         }
 
+        #if !APP_STORE_BUILD
         // Start hotkey monitoring
         if globalHotkeyEnabled {
             hotkeyManager.startMonitoring()
         }
+        #endif
 
         // Show ready notification (only if we have a bundle)
         if Bundle.main.bundleIdentifier != nil {
             let content = UNMutableNotificationContent()
-            content.title = "Speech to Text Ready!"
-            content.body = "Press Ctrl twice to start recording"
+            content.title = "\(AppBrand.displayName) Ready!"
+            #if APP_STORE_BUILD
+            content.body = "Click the menu bar icon to start recording"
+            #else
+            content.body = "Press Cmd+Shift+Space to start recording"
+            #endif
             content.sound = .default
             let request = UNNotificationRequest(identifier: "ready", content: content, trigger: nil)
             try? await UNUserNotificationCenter.current().add(request)
         } else {
-            print("Speech to Text Ready! Press Ctrl twice to start recording")
+            print("\(AppBrand.displayName) Ready!")
         }
 
         isInitialSetupComplete = true
     }
 
+    #if !APP_STORE_BUILD
     private func handleHotkeyPress() async {
         // Toggle recording
         if isRecording {
@@ -108,6 +119,7 @@ class AppState: ObservableObject {
             await startRecordingWithFeedback()
         }
     }
+    #endif
 
     func startRecording() async throws {
         currentTranscription = ""
@@ -203,8 +215,12 @@ class AppState: ObservableObject {
             historyManager.save(transcription)
             transcriptionHistory.insert(transcription, at: 0)
 
-            // Insert at cursor and copy to clipboard
+            // Insert at cursor (direct distribution) or just copy to clipboard (App Store)
+            #if APP_STORE_BUILD
+            copyToClipboard()
+            #else
             textInsertionService.insertTextAtCursor(result)
+            #endif
             notificationService.showTranscriptionComplete(text: result)
 
         } catch {
@@ -247,6 +263,7 @@ class AppState: ObservableObject {
     }
 
     func toggleGlobalHotkey() {
+        #if !APP_STORE_BUILD
         globalHotkeyEnabled.toggle()
 
         if globalHotkeyEnabled {
@@ -254,5 +271,6 @@ class AppState: ObservableObject {
         } else {
             hotkeyManager.stopMonitoring()
         }
+        #endif
     }
 }

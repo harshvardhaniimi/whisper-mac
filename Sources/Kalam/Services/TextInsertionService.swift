@@ -1,5 +1,7 @@
 import Cocoa
+#if !APP_STORE_BUILD
 import ApplicationServices
+#endif
 
 class TextInsertionService {
     static let shared = TextInsertionService()
@@ -11,19 +13,22 @@ class TextInsertionService {
         // First, copy to clipboard
         copyToClipboard(text)
 
+        #if !APP_STORE_BUILD
         // Small delay to ensure clipboard is set
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             // Simulate Cmd+V to paste
             self.simulatePaste()
         }
+        #endif
     }
 
-    private func copyToClipboard(_ text: String) {
+    func copyToClipboard(_ text: String) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
     }
 
+    #if !APP_STORE_BUILD
     private func simulatePaste() {
         // Check if there's a frontmost application
         guard NSWorkspace.shared.frontmostApplication != nil else {
@@ -99,4 +104,5 @@ class TextInsertionService {
         let options: NSDictionary = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
         return AXIsProcessTrustedWithOptions(options)
     }
+    #endif
 }

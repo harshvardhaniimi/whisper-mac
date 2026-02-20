@@ -21,15 +21,15 @@
     <key>LSMinimumSystemVersion</key>
     <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Whisper needs access to your microphone to transcribe speech.</string>
+    <string>$(PRODUCT_NAME) needs access to your microphone to transcribe speech.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Whisper uses Apple's Speech Recognition to convert your speech to text.</string>
+    <string>$(PRODUCT_NAME) uses speech recognition to convert your speech to text.</string>
     <key>NSAppleEventsUsageDescription</key>
-    <string>Whisper needs to send keystrokes to insert transcribed text at your cursor position.</string>
+    <string>$(PRODUCT_NAME) needs to send keystrokes to insert transcribed text at your cursor position.</string>
     <key>NSSystemAdministrationUsageDescription</key>
-    <string>Whisper needs accessibility access to detect global hotkey (Ctrl+Ctrl) and insert text at cursor.</string>
+    <string>$(PRODUCT_NAME) needs accessibility access to detect global hotkeys and insert text at your cursor.</string>
     <key>NSUserNotificationUsageDescription</key>
-    <string>Whisper needs to send notifications to alert you when recording starts, stops, and transcription is complete.</string>
+    <string>$(PRODUCT_NAME) needs notifications permission to alert you when recording starts, stops, and transcription is complete.</string>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2026. All rights reserved.</string>
     <key>LSUIElement</key>
