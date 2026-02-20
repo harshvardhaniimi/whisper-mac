@@ -1,7 +1,6 @@
 import SwiftUI
 import Combine
 import UserNotifications
-import Speech
 
 @MainActor
 class AppState: ObservableObject {
@@ -78,10 +77,25 @@ class AppState: ObservableObject {
     func initialize() async {
         guard !isInitialSetupComplete else { return }
 
-        // Request speech recognition authorization
-        let authorized = await whisperService.requestAuthorization()
-        if !authorized {
-            print("Speech recognition not authorized")
+        // Auto-download default model if not installed
+        if !modelManager.isModelInstalled(selectedModel) {
+            isDownloadingModel = true
+            do {
+                try await modelManager.downloadModel(selectedModel)
+            } catch {
+                print("Failed to download default model: \(error)")
+            }
+            isDownloadingModel = false
+        }
+
+        // Pre-load the selected model into WhisperKit
+        if modelManager.isModelInstalled(selectedModel) {
+            let modelPath = modelManager.getModelPath(selectedModel)
+            do {
+                try await whisperService.loadModel(selectedModel, modelPath: modelPath)
+            } catch {
+                print("Failed to pre-load model: \(error)")
+            }
         }
 
         #if !APP_STORE_BUILD
@@ -122,6 +136,9 @@ class AppState: ObservableObject {
     #endif
 
     func startRecording() async throws {
+        guard modelManager.isModelInstalled(selectedModel) else {
+            throw TranscriptionError.modelNotFound
+        }
         currentTranscription = ""
         try await audioService.startRecording()
         isRecording = true
@@ -129,6 +146,10 @@ class AppState: ObservableObject {
 
     func startRecordingWithFeedback() async {
         do {
+            guard modelManager.isModelInstalled(selectedModel) else {
+                notificationService.showError("Model not downloaded. Please download a model in Settings.")
+                return
+            }
             currentTranscription = ""
             try await audioService.startRecording()
             isRecording = true
@@ -148,7 +169,7 @@ class AppState: ObservableObject {
         // Hide recording indicator
         RecordingIndicatorWindow.shared.hide()
 
-        guard let audioData = await audioService.stopRecording() else {
+        guard let audioSamples = await audioService.stopRecordingAndGetSamples() else {
             isRecording = false
             return
         }
@@ -157,9 +178,11 @@ class AppState: ObservableObject {
         isProcessing = true
 
         do {
+            let modelPath = modelManager.getModelPath(selectedModel)
             let result = try await whisperService.transcribe(
-                audioData: audioData,
+                audioSamples: audioSamples,
                 model: selectedModel,
+                modelPath: modelPath,
                 language: selectedLanguage == "auto" ? nil : selectedLanguage
             )
 
@@ -187,7 +210,7 @@ class AppState: ObservableObject {
         // Hide recording indicator
         RecordingIndicatorWindow.shared.hide()
 
-        guard let audioData = await audioService.stopRecording() else {
+        guard let audioSamples = await audioService.stopRecordingAndGetSamples() else {
             isRecording = false
             return
         }
@@ -197,9 +220,11 @@ class AppState: ObservableObject {
         isProcessing = true
 
         do {
+            let modelPath = modelManager.getModelPath(selectedModel)
             let result = try await whisperService.transcribe(
-                audioData: audioData,
+                audioSamples: audioSamples,
                 model: selectedModel,
+                modelPath: modelPath,
                 language: selectedLanguage == "auto" ? nil : selectedLanguage
             )
 
@@ -234,12 +259,18 @@ class AppState: ObservableObject {
     }
 
     func transcribeFile(url: URL) async throws {
+        guard modelManager.isModelInstalled(selectedModel) else {
+            throw TranscriptionError.modelNotFound
+        }
+
         isProcessing = true
         defer { isProcessing = false }
 
+        let modelPath = modelManager.getModelPath(selectedModel)
         let result = try await whisperService.transcribeFile(
             url: url,
             model: selectedModel,
+            modelPath: modelPath,
             language: selectedLanguage == "auto" ? nil : selectedLanguage
         )
 

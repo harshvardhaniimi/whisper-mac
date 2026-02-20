@@ -1,98 +1,134 @@
 import Foundation
-import Speech
-import AVFoundation
+import WhisperKit
 
 @MainActor
 class WhisperService: ObservableObject {
-    private var speechRecognizer: SFSpeechRecognizer?
+    @Published var isModelLoaded = false
 
-    init() {
-        // Initialize with the default locale
-        speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    private var whisperKit: WhisperKit?
+    private var currentModelName: String?
+
+    init() {}
+
+    /// Load (or switch to) a specific model. Idempotent if already loaded.
+    func loadModel(_ model: WhisperModel, modelPath: URL) async throws {
+        let modelName = model.whisperKitModelName
+
+        // Skip if this exact model is already loaded
+        if currentModelName == modelName, whisperKit != nil, isModelLoaded {
+            return
+        }
+
+        // Unload previous model if switching
+        if whisperKit != nil {
+            await whisperKit?.unloadModels()
+            whisperKit = nil
+            isModelLoaded = false
+        }
+
+        do {
+            let config = WhisperKitConfig(
+                modelFolder: modelPath.path,
+                verbose: false,
+                logLevel: .error,
+                prewarm: true,
+                load: true,
+                download: false
+            )
+
+            whisperKit = try await WhisperKit(config)
+            currentModelName = modelName
+            isModelLoaded = true
+        } catch {
+            isModelLoaded = false
+            throw TranscriptionError.initializationFailed
+        }
     }
 
+    /// Transcribe from raw audio samples (from live recording).
+    /// Expects 16kHz mono float samples.
+    func transcribe(
+        audioSamples: [Float],
+        model: WhisperModel,
+        modelPath: URL,
+        language: String? = nil
+    ) async throws -> String {
+        try await loadModel(model, modelPath: modelPath)
+
+        guard let whisperKit = whisperKit else {
+            throw TranscriptionError.contextNotInitialized
+        }
+
+        var options = DecodingOptions()
+        if let language = language, language != "auto" {
+            options.language = language
+            options.usePrefillPrompt = true
+        } else {
+            options.language = nil
+            options.detectLanguage = true
+        }
+
+        let results = try await whisperKit.transcribe(
+            audioArray: audioSamples,
+            decodeOptions: options
+        )
+
+        let text = results.map { $0.text }.joined(separator: " ").trimmingCharacters(in: .whitespaces)
+
+        guard !text.isEmpty else {
+            throw TranscriptionError.processingFailed
+        }
+
+        return text
+    }
+
+    /// Transcribe an audio file (WAV, MP3, M4A, FLAC).
+    func transcribeFile(
+        url: URL,
+        model: WhisperModel,
+        modelPath: URL,
+        language: String? = nil
+    ) async throws -> String {
+        try await loadModel(model, modelPath: modelPath)
+
+        guard let whisperKit = whisperKit else {
+            throw TranscriptionError.contextNotInitialized
+        }
+
+        var options = DecodingOptions()
+        if let language = language, language != "auto" {
+            options.language = language
+            options.usePrefillPrompt = true
+        } else {
+            options.language = nil
+            options.detectLanguage = true
+        }
+
+        let results = try await whisperKit.transcribe(
+            audioPath: url.path,
+            decodeOptions: options
+        )
+
+        let text = results.map { $0.text }.joined(separator: " ").trimmingCharacters(in: .whitespaces)
+
+        guard !text.isEmpty else {
+            throw TranscriptionError.processingFailed
+        }
+
+        return text
+    }
+
+    /// Unload model to free memory
+    func unloadModel() async {
+        await whisperKit?.unloadModels()
+        whisperKit = nil
+        currentModelName = nil
+        isModelLoaded = false
+    }
+
+    /// No-op — Whisper doesn't need SFSpeechRecognizer authorization
     func requestAuthorization() async -> Bool {
-        await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { status in
-                continuation.resume(returning: status == .authorized)
-            }
-        }
-    }
-
-    func transcribe(audioData: Data, model: WhisperModel, language: String? = nil) async throws -> String {
-        // Set up recognizer for the specified language
-        let locale: Locale
-        if let language = language, language != "auto" {
-            locale = Locale(identifier: language)
-        } else {
-            locale = Locale.current
-        }
-
-        speechRecognizer = SFSpeechRecognizer(locale: locale)
-
-        guard let recognizer = speechRecognizer, recognizer.isAvailable else {
-            throw TranscriptionError.initializationFailed
-        }
-
-        // Check authorization
-        let authorized = await requestAuthorization()
-        guard authorized else {
-            throw TranscriptionError.permissionDenied
-        }
-
-        // Save audio data to temporary file
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".wav")
-        try audioData.write(to: tempURL)
-
-        defer {
-            try? FileManager.default.removeItem(at: tempURL)
-        }
-
-        // Transcribe the file
-        return try await transcribeFile(url: tempURL, model: model, language: language)
-    }
-
-    func transcribeFile(url: URL, model: WhisperModel, language: String? = nil) async throws -> String {
-        // Set up recognizer for the specified language
-        let locale: Locale
-        if let language = language, language != "auto" {
-            locale = Locale(identifier: language)
-        } else {
-            locale = Locale.current
-        }
-
-        speechRecognizer = SFSpeechRecognizer(locale: locale)
-
-        guard let recognizer = speechRecognizer, recognizer.isAvailable else {
-            throw TranscriptionError.initializationFailed
-        }
-
-        // Check authorization
-        let authorized = await requestAuthorization()
-        guard authorized else {
-            throw TranscriptionError.permissionDenied
-        }
-
-        // Create recognition request
-        let request = SFSpeechURLRecognitionRequest(url: url)
-        request.shouldReportPartialResults = false
-
-        // Perform recognition
-        return try await withCheckedThrowingContinuation { continuation in
-            recognizer.recognitionTask(with: request) { result, error in
-                if error != nil {
-                    continuation.resume(throwing: TranscriptionError.processingFailed)
-                    return
-                }
-
-                guard let result = result, result.isFinal else {
-                    return
-                }
-
-                let transcription = result.bestTranscription.formattedString
-                continuation.resume(returning: transcription)
-            }
-        }
+        return true
     }
 }
 
@@ -107,17 +143,17 @@ enum TranscriptionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .modelNotFound:
-            return "Speech recognition not available."
+            return "Model not found. Please download it first."
         case .initializationFailed:
-            return "Failed to initialize speech recognizer."
+            return "Failed to initialize Whisper engine."
         case .contextNotInitialized:
-            return "Speech recognizer not initialized."
+            return "Whisper engine not initialized."
         case .processingFailed:
-            return "Failed to process audio."
+            return "Failed to process audio. No speech detected."
         case .invalidAudioFile:
-            return "Invalid audio file format."
+            return "Invalid or unsupported audio file format."
         case .permissionDenied:
-            return "Speech recognition permission denied. Please enable in System Settings."
+            return "Microphone permission denied. Please enable in System Settings."
         }
     }
 }

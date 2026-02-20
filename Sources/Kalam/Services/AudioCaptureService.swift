@@ -98,6 +98,23 @@ class AudioCaptureService: ObservableObject {
         return createWAVData()
     }
 
+    /// Stop recording and return raw 16kHz mono float samples for WhisperKit.
+    func stopRecordingAndGetSamples() async -> [Float]? {
+        levelTimer?.invalidate()
+        levelTimer = nil
+
+        inputNode?.removeTap(onBus: 0)
+        audioEngine?.stop()
+
+        isRecording = false
+        audioLevel = 0.0
+
+        guard !audioSamples.isEmpty else { return nil }
+
+        // Resample from input sample rate (typically 48kHz) to 16kHz
+        return resample(audioSamples, from: 48000, to: 16000)
+    }
+
     private func calculateAudioLevel(from buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData else { return }
 

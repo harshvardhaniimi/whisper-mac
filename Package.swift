@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Kalam",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     products: [
         .executable(
@@ -12,15 +12,18 @@ let package = Package(
             targets: ["Kalam"]
         )
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "0.9.0"),
+    ],
     targets: [
         .executableTarget(
             name: "Kalam",
-            dependencies: [],
+            dependencies: [
+                .product(name: "WhisperKit", package: "WhisperKit"),
+            ],
             path: "Sources/Kalam",
             linkerSettings: [
                 .linkedFramework("AVFoundation"),
-                .linkedFramework("Speech"),
                 .linkedFramework("AppKit"),
                 .linkedFramework("Carbon")
             ]

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
-    @StateObject private var modelManager = ModelManager()
 
     private var appVersionLabel: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
@@ -65,7 +64,7 @@ struct SettingsView: View {
                 Text("Enable Cmd+Shift+Space hotkey")
                     .font(DesignSystem.Typography.body)
             }
-            .onChange(of: appState.globalHotkeyEnabled) { _ in
+            .onChange(of: appState.globalHotkeyEnabled) {
                 appState.toggleGlobalHotkey()
             }
 
@@ -106,13 +105,13 @@ struct SettingsView: View {
                 .font(DesignSystem.Typography.headline)
                 .foregroundColor(DesignSystem.Colors.textPrimary)
 
-            Text("Download and manage speech models. Larger models provide better accuracy but require more resources.")
+            Text("Download and manage Whisper models. Larger models provide better accuracy but require more resources.")
                 .font(DesignSystem.Typography.caption)
                 .foregroundColor(DesignSystem.Colors.textSecondary)
 
             VStack(spacing: DesignSystem.Spacing.sm) {
                 ForEach(WhisperModel.allCases) { model in
-                    ModelRow(model: model, modelManager: modelManager, appState: appState)
+                    ModelRow(model: model, modelManager: appState.modelManager, appState: appState)
                 }
             }
         }
@@ -141,6 +140,28 @@ struct SettingsView: View {
                 Text("Russian").tag("ru")
                 Text("Arabic").tag("ar")
                 Text("Hindi").tag("hi")
+                Divider()
+                Text("Dutch").tag("nl")
+                Text("Turkish").tag("tr")
+                Text("Polish").tag("pl")
+                Text("Swedish").tag("sv")
+                Text("Indonesian").tag("id")
+                Text("Thai").tag("th")
+                Text("Vietnamese").tag("vi")
+                Text("Hebrew").tag("he")
+                Text("Ukrainian").tag("uk")
+                Text("Malay").tag("ms")
+                Text("Czech").tag("cs")
+                Text("Romanian").tag("ro")
+                Text("Danish").tag("da")
+                Text("Finnish").tag("fi")
+                Text("Hungarian").tag("hu")
+                Text("Norwegian").tag("no")
+                Text("Greek").tag("el")
+                Text("Tamil").tag("ta")
+                Text("Urdu").tag("ur")
+                Text("Bengali").tag("bn")
+                Text("Catalan").tag("ca")
             }
             .pickerStyle(.menu)
         }
@@ -174,7 +195,7 @@ struct SettingsView: View {
                     Text("Powered by:")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textSecondary)
-                    Text("Apple Speech Recognition")
+                    Text("OpenAI Whisper (via WhisperKit)")
                         .font(DesignSystem.Typography.callout)
                         .foregroundColor(DesignSystem.Colors.textPrimary)
                 }
@@ -244,14 +265,15 @@ struct ModelRow: View {
                     .buttonStyle(SecondaryButtonStyle())
                 }
 
-                // Delete button
+                // Delete button (disabled for currently selected model)
                 Button(action: {
                     try? modelManager.deleteModel(model)
                 }) {
                     Image(systemName: "trash")
                 }
                 .buttonStyle(IconButtonStyle())
-                .help("Delete model")
+                .disabled(appState.selectedModel == model)
+                .help(appState.selectedModel == model ? "Cannot delete selected model" : "Delete model")
 
             } else if let progress = modelManager.downloadProgress[model] {
                 // Downloading

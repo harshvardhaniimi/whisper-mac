@@ -1,8 +1,8 @@
 # Kalam 🎤
 
-A beautiful, native macOS app for speech-to-text transcription using Apple Speech Recognition. Completely local, private, and free.
+A beautiful, native macOS app for speech-to-text transcription powered by OpenAI Whisper. Completely local, private, and free.
 
-![macOS](https://img.shields.io/badge/macOS-13.0+-blue)
+![macOS](https://img.shields.io/badge/macOS-14.0+-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -152,7 +152,7 @@ The fastest way to transcribe:
 
 ## System Requirements
 
-- **macOS 13.0 (Ventura) or later**
+- **macOS 14.0 (Sonoma) or later**
 - **RAM:**
   - 8 GB minimum (for tiny/base models)
   - 16 GB recommended (for small/medium models)
@@ -188,8 +188,8 @@ Models are downloaded once from Hugging Face and stored locally:
 - **Language**: Swift 5.9+
 - **UI Framework**: SwiftUI
 - **Audio**: AVFoundation
-- **ML Backend**: Apple Speech Recognition (SFSpeechRecognizer)
-- **Acceleration**: Metal + Accelerate frameworks
+- **ML Backend**: OpenAI Whisper via [WhisperKit](https://github.com/argmaxinc/WhisperKit) (CoreML)
+- **Acceleration**: Apple Neural Engine + CoreML on Apple Silicon
 
 **Design Philosophy:**
 - Native macOS design patterns
@@ -312,8 +312,7 @@ If you encounter any quirks or have suggestions for improvement, please don't he
 ## Credits
 
 - **OpenAI Whisper** - The incredible speech recognition model: https://github.com/openai/whisper
-- **whisper.cpp** - Efficient C++ implementation: https://github.com/ggerganov/whisper.cpp
-- **Apple Speech Framework** - On-device speech recognition
+- **WhisperKit** - Swift-native Whisper on Apple platforms: https://github.com/argmaxinc/WhisperKit
 - **Design inspiration** - Apple HIG, Claude.ai, classic Mac apps
 
 ## License
