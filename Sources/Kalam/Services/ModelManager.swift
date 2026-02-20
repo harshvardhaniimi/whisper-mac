@@ -8,6 +8,13 @@ class ModelManager: ObservableObject {
     @Published var isDownloading = false
 
     private let modelRepo = "argmaxinc/whisperkit-coreml"
+    private let pathsKey = "ModelManager.modelPaths"
+
+    /// Persisted map of model raw value → actual folder path on disk
+    private var modelPaths: [String: String] {
+        get { UserDefaults.standard.dictionary(forKey: pathsKey) as? [String: String] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: pathsKey) }
+    }
 
     /// Base directory for all WhisperKit models
     var modelsDirectory: URL {
@@ -25,20 +32,43 @@ class ModelManager: ObservableObject {
         checkInstalledModels()
     }
 
-    /// Scan the models directory and update installedModels set
+    /// Scan for installed models using stored paths and HuggingFace cache
     func checkInstalledModels() {
         var found = Set<WhisperModel>()
+        var paths = modelPaths
+
         for model in WhisperModel.allCases {
-            let modelPath = modelsDirectory.appendingPathComponent(model.folderName)
-            if FileManager.default.fileExists(atPath: modelPath.path) {
+            // Check stored path first
+            if let stored = paths[model.rawValue],
+               FileManager.default.fileExists(atPath: stored) {
+                found.insert(model)
+                continue
+            }
+
+            // Fall back to scanning HuggingFace cache structure
+            if let cachedURL = findModelInCache(model) {
+                paths[model.rawValue] = cachedURL.path
                 found.insert(model)
             }
         }
+
+        modelPaths = paths
         installedModels = found
     }
 
     func getModelPath(_ model: WhisperModel) -> URL {
-        modelsDirectory.appendingPathComponent(model.folderName)
+        if let stored = modelPaths[model.rawValue] {
+            return URL(fileURLWithPath: stored)
+        }
+        // Fallback: scan HuggingFace cache
+        if let cached = findModelInCache(model) {
+            var paths = modelPaths
+            paths[model.rawValue] = cached.path
+            modelPaths = paths
+            return cached
+        }
+        // Last resort (path won't exist, but callers check isModelInstalled first)
+        return modelsDirectory.appendingPathComponent(model.folderName)
     }
 
     func isModelInstalled(_ model: WhisperModel) -> Bool {
@@ -55,7 +85,7 @@ class ModelManager: ObservableObject {
         downloadProgress[model] = 0.0
 
         do {
-            let _ = try await WhisperKit.download(
+            let modelFolder = try await WhisperKit.download(
                 variant: model.whisperKitModelName,
                 downloadBase: modelsDirectory,
                 useBackgroundSession: false,
@@ -66,6 +96,11 @@ class ModelManager: ObservableObject {
                     }
                 }
             )
+
+            // Store the actual path returned by WhisperKit
+            var paths = modelPaths
+            paths[model.rawValue] = modelFolder.path
+            modelPaths = paths
 
             installedModels.insert(model)
             downloadProgress.removeValue(forKey: model)
@@ -80,11 +115,34 @@ class ModelManager: ObservableObject {
 
     /// Delete a model's files from disk
     func deleteModel(_ model: WhisperModel) throws {
-        let modelPath = getModelPath(model)
-        if FileManager.default.fileExists(atPath: modelPath.path) {
-            try FileManager.default.removeItem(at: modelPath)
+        if let stored = modelPaths[model.rawValue],
+           FileManager.default.fileExists(atPath: stored) {
+            try FileManager.default.removeItem(atPath: stored)
         }
+        var paths = modelPaths
+        paths.removeValue(forKey: model.rawValue)
+        modelPaths = paths
         installedModels.remove(model)
+    }
+
+    /// Search for a model in the HuggingFace hub cache structure
+    private func findModelInCache(_ model: WhisperModel) -> URL? {
+        let hubCacheDir = modelsDirectory
+            .appendingPathComponent("models--argmaxinc--whisperkit-coreml")
+            .appendingPathComponent("snapshots")
+
+        guard let snapshots = try? FileManager.default.contentsOfDirectory(
+            at: hubCacheDir,
+            includingPropertiesForKeys: nil
+        ) else { return nil }
+
+        for snapshot in snapshots {
+            let modelDir = snapshot.appendingPathComponent(model.folderName)
+            if FileManager.default.fileExists(atPath: modelDir.path) {
+                return modelDir
+            }
+        }
+        return nil
     }
 }
 

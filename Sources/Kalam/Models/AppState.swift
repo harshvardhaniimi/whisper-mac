@@ -295,8 +295,6 @@ class AppState: ObservableObject {
 
     func toggleGlobalHotkey() {
         #if !APP_STORE_BUILD
-        globalHotkeyEnabled.toggle()
-
         if globalHotkeyEnabled {
             hotkeyManager.startMonitoring()
         } else {
