@@ -64,5 +64,7 @@ Sources/WhisperCpp/include/
 .idea/
 *.sublime-*
 
-# Claude Code skills (reference only, not part of the app)
+# Claude Code
+CLAUDE.md
+.claude/
 claude-code-apple-skills/
